@@ -457,6 +457,30 @@
                 <div style="font-family:'DM Mono',monospace;font-size:14px;" id="s-delta">—</div>
               </div>
             </div>
+
+            <div class="divider" style="margin:14px 0 12px;"></div>
+            <div class="section-label" style="margin-bottom:6px;">Withholding Simulator</div>
+            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;">Enter a proposed per-period withholding amount to see how it shifts your position.</p>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div class="input-wrap" style="width:160px;flex-shrink:0;">
+                <span class="prefix">$</span>
+                <input class="currency-input" id="s-adj-withheld" placeholder="e.g. 1,500" inputmode="numeric" style="height:38px;font-size:13px;">
+              </div>
+              <div style="display:flex;gap:16px;flex:1;flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.4px;">Simulated Annual</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;" id="s-sim-annual">—</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.4px;">Simulated Position</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;" id="s-sim-position">—</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.4px;">Est. Refund / Owed</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;" id="s-sim-refund">—</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -638,6 +662,16 @@
                 <div><div style="font-size:11px;color:var(--text-secondary);">Required / Period</div><div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--blue);" id="j-req1">—</div></div>
                 <div><div style="font-size:11px;color:var(--text-secondary);">Refund / Due</div><div style="font-family:'DM Mono',monospace;font-size:14px;" id="j-delta1">—</div></div>
               </div>
+              <div class="divider" style="margin:12px 0 10px;"></div>
+              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator</div>
+              <div class="input-wrap" style="max-width:140px;margin-bottom:8px;">
+                <span class="prefix">$</span>
+                <input class="currency-input" id="j-adj1" placeholder="Proposed amt" inputmode="numeric" style="height:36px;font-size:12px;">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:10px;color:var(--text-secondary);">Sim. Position: <span style="font-family:'DM Mono',monospace;font-weight:600;" id="j-sim-pos1">—</span></div>
+                <div style="font-size:10px;color:var(--text-secondary);">Est. Refund/Owed: <span style="font-family:'DM Mono',monospace;font-weight:500;" id="j-sim-ref1">—</span></div>
+              </div>
             </div>
             <div>
               <div class="section-label" style="margin-bottom:8px;">Salary 2</div>
@@ -645,6 +679,16 @@
                 <div><div style="font-size:11px;color:var(--text-secondary);">Annual Withheld</div><div style="font-family:'DM Mono',monospace;font-size:14px;" id="j-ttw2">—</div></div>
                 <div><div style="font-size:11px;color:var(--text-secondary);">Required / Period</div><div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--blue);" id="j-req2">—</div></div>
                 <div><div style="font-size:11px;color:var(--text-secondary);">Refund / Due</div><div style="font-family:'DM Mono',monospace;font-size:14px;" id="j-delta2">—</div></div>
+              </div>
+              <div class="divider" style="margin:12px 0 10px;"></div>
+              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator</div>
+              <div class="input-wrap" style="max-width:140px;margin-bottom:8px;">
+                <span class="prefix">$</span>
+                <input class="currency-input" id="j-adj2" placeholder="Proposed amt" inputmode="numeric" style="height:36px;font-size:12px;">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:10px;color:var(--text-secondary);">Sim. Position: <span style="font-family:'DM Mono',monospace;font-weight:600;" id="j-sim-pos2">—</span></div>
+                <div style="font-size:10px;color:var(--text-secondary);">Est. Refund/Owed: <span style="font-family:'DM Mono',monospace;font-weight:500;" id="j-sim-ref2">—</span></div>
               </div>
             </div>
           </div>
@@ -862,19 +906,22 @@ function calcSingle() {
   const ppEl      = document.getElementById('s-payperiod');
   const pp        = ppEl.value ? parseInt(ppEl.value) : null;
   const withheld  = getRaw(document.getElementById('s-withheld'));
+  const adjWH     = getRaw(document.getElementById('s-adj-withheld'));  // simulator field
 
   const taxable  = (salary != null && deduction != null) ? Math.max(0, salary - deduction) : null;
   const canCalc  = taxable != null && sBrackets.every(b => b != null);
 
   buildBracketTable('s-bracket-body', sBrackets, 's', taxable);
-
   if (!canCalc) return;
 
-  const totalTax = computeTax(taxable, sBrackets);
-  const takeHome = salary - totalTax;
-  const effRate  = salary > 0 ? totalTax / salary : 0;
-  const margRate = marginalRate(taxable, sBrackets);
+  const totalTax     = computeTax(taxable, sBrackets);
+  const takeHome     = salary - totalTax;
+  const effRate      = salary > 0 ? totalTax / salary : 0;
+  const margRate     = marginalRate(taxable, sBrackets);
+  const reqPerPeriod = pp ? totalTax / pp : null;
+  const ppLabels     = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
 
+  // Summary cards
   document.getElementById('s-r-total-tax').textContent = fmt(totalTax);
   document.getElementById('s-r-taxable').textContent   = fmt(taxable);
   document.getElementById('s-r-takehome').textContent  = fmt(takeHome);
@@ -883,7 +930,7 @@ function calcSingle() {
   document.getElementById('s-eff-label').textContent   = fmtPct(effRate);
   document.getElementById('s-rate-bar').style.width    = Math.min(100, effRate / 0.37 * 100) + '%';
 
-  // Pay period tax impact grid
+  // Pay period tax grid
   const ppMap = { 52:'s-pp-weekly', 26:'s-pp-biweekly', 24:'s-pp-semi', 12:'s-pp-monthly' };
   Object.values(ppMap).forEach(id => document.getElementById(id).classList.remove('active-pp'));
   document.getElementById('s-pp-weekly-val').textContent   = fmt(totalTax / 52);
@@ -893,48 +940,71 @@ function calcSingle() {
   if (pp && ppMap[pp]) document.getElementById(ppMap[pp]).classList.add('active-pp');
 
   // Per-period take-home card
-  const ppLabels = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
   if (pp) {
-    const ppTakeHome = takeHome / pp;
-    document.getElementById('s-r-pp-takehome').textContent     = fmt(ppTakeHome);
+    document.getElementById('s-r-pp-takehome').textContent     = fmt(takeHome / pp);
     document.getElementById('s-r-pp-takehome-sub').textContent = ppLabels[pp] + ' after-tax pay';
   } else {
     document.getElementById('s-r-pp-takehome').textContent     = '—';
     document.getElementById('s-r-pp-takehome-sub').textContent = 'Select a pay period';
   }
 
-  // Withholding analysis row
-  const reqPerPeriod = pp ? totalTax / pp : null;
+  // Withholding analysis — use adjWH as effective withheld if set, fall back to withheld
+  const effectiveWH = adjWH != null ? adjWH : withheld;
+
   document.getElementById('s-req-ded').textContent = reqPerPeriod != null ? fmt(reqPerPeriod) : '—';
+
   if (withheld != null && pp) {
     const ttw   = withheld * pp;
-    const delta = ttw - totalTax;           // positive = over-withheld (refund), negative = under (owe)
+    const delta = ttw - totalTax;
     document.getElementById('s-ttw').textContent   = fmt(ttw);
     const dEl = document.getElementById('s-delta');
     dEl.textContent = fmtDelta(delta);
     dEl.style.color = deltaColor(delta);
-
-    // Net position card — per-period surplus or deficit
-    const netCard  = document.getElementById('s-net-card');
-    const netVal   = document.getElementById('s-net-value');
-    const netSub   = document.getElementById('s-net-sub');
-    const perPeriodDelta = withheld - reqPerPeriod;   // + = over per period, - = under per period
-    netCard.className = 'result-card ' + (perPeriodDelta >= 0 ? 'net-over' : 'net-under');
-    if (perPeriodDelta >= 0) {
-      netVal.textContent = '+' + fmt(perPeriodDelta);
-      netSub.textContent = 'Over-withheld per ' + ppLabels[pp] + ' — expect refund';
-    } else {
-      netVal.textContent = fmt(perPeriodDelta);
-      netSub.textContent = 'Under-withheld per ' + ppLabels[pp] + ' — additional ' + fmt(Math.abs(perPeriodDelta)) + ' needed';
-    }
   } else {
     document.getElementById('s-ttw').textContent   = '—';
     document.getElementById('s-delta').textContent = '—';
     document.getElementById('s-delta').style.color = 'var(--text)';
-    const netCard = document.getElementById('s-net-card');
+  }
+
+  // Net position card — driven by simulator if active, otherwise current withheld
+  const netCard = document.getElementById('s-net-card');
+  const netVal  = document.getElementById('s-net-value');
+  const netSub  = document.getElementById('s-net-sub');
+
+  if (effectiveWH != null && pp && reqPerPeriod != null) {
+    const ppDelta = effectiveWH - reqPerPeriod;
+    netCard.className = 'result-card ' + (ppDelta >= 0 ? 'net-over' : 'net-under');
+    netVal.textContent = (ppDelta >= 0 ? '+' : '') + fmt(ppDelta);
+    netSub.textContent = ppDelta >= 0
+      ? 'Over-withheld per ' + ppLabels[pp] + ' — expect refund'
+      : 'Under-withheld — need ' + fmt(Math.abs(ppDelta)) + ' more per ' + ppLabels[pp];
+    if (adjWH != null) netSub.textContent += ' (simulated)';
+  } else {
     netCard.className = 'result-card';
-    document.getElementById('s-net-value').textContent = '—';
-    document.getElementById('s-net-sub').textContent   = withheld == null ? 'Enter current withheld amount' : 'Select a pay period';
+    netVal.textContent = '—';
+    netSub.textContent = withheld == null ? 'Enter current withheld amount' : 'Select a pay period';
+  }
+
+  // Simulator outputs
+  if (adjWH != null && pp && reqPerPeriod != null) {
+    const simAnnual   = adjWH * pp;
+    const simPosDelta = adjWH - reqPerPeriod;
+    const simRefund   = simAnnual - totalTax;
+    const posColor    = simPosDelta >= 0 ? 'var(--green)' : 'var(--red)';
+
+    document.getElementById('s-sim-annual').textContent   = fmt(simAnnual);
+    const spEl = document.getElementById('s-sim-position');
+    spEl.textContent = (simPosDelta >= 0 ? '+' : '') + fmt(simPosDelta) + ' / period';
+    spEl.style.color = posColor;
+    const srEl = document.getElementById('s-sim-refund');
+    srEl.textContent = (simRefund >= 0 ? '+' : '') + fmt(simRefund);
+    srEl.style.color = posColor;
+  } else {
+    document.getElementById('s-sim-annual').textContent   = adjWH == null ? '—' : 'Select pay period';
+    document.getElementById('s-sim-position').textContent = '—';
+    document.getElementById('s-sim-position').style.color = 'var(--text)';
+    document.getElementById('s-sim-refund').textContent   = '—';
+    document.getElementById('s-sim-refund').style.color   = 'var(--text)';
   }
 
   sChart = drawChart('s-chart', sChart, salary, totalTax);
@@ -953,13 +1023,14 @@ function calcJoint() {
   const pp2 = pp2El.value ? parseInt(pp2El.value) : null;
   const w1  = getRaw(document.getElementById('j-withheld1'));
   const w2  = getRaw(document.getElementById('j-withheld2'));
+  const adj1 = getRaw(document.getElementById('j-adj1'));  // simulator
+  const adj2 = getRaw(document.getElementById('j-adj2'));  // simulator
 
   const combined = (s1 != null || s2 != null) ? (s1||0) + (s2||0) : null;
   const taxable  = (combined != null && ded != null) ? Math.max(0, combined - ded) : null;
   const canCalc  = taxable != null && jBrackets.every(b => b != null);
 
   buildBracketTable('j-bracket-body', jBrackets, 'j', taxable);
-
   if (!canCalc) return;
 
   const totalTax = computeTax(taxable, jBrackets);
@@ -980,31 +1051,17 @@ function calcJoint() {
   const tax2 = tot > 0 ? totalTax * ((s2||0) / tot) : 0;
   const th1  = (s1||0) - tax1;
   const th2  = (s2||0) - tax2;
-
   const ppLabels = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
-
-  // Per-period take-home — Salary 1
-  if (pp1) {
-    document.getElementById('j-r-pp-takehome1').textContent = fmt(th1 / pp1);
-    document.getElementById('j-r-pp-th1-sub').textContent   = ppLabels[pp1] + ' after-tax pay';
-  } else {
-    document.getElementById('j-r-pp-takehome1').textContent = '—';
-    document.getElementById('j-r-pp-th1-sub').textContent   = 'Select a pay period';
-  }
-
-  // Per-period take-home — Salary 2
-  if (pp2) {
-    document.getElementById('j-r-pp-takehome2').textContent = fmt(th2 / pp2);
-    document.getElementById('j-r-pp-th2-sub').textContent   = ppLabels[pp2] + ' after-tax pay';
-  } else {
-    document.getElementById('j-r-pp-takehome2').textContent = '—';
-    document.getElementById('j-r-pp-th2-sub').textContent   = 'Select a pay period';
-  }
-
-  // Withholding analysis per spouse
   const req1 = pp1 ? tax1 / pp1 : null;
   const req2 = pp2 ? tax2 / pp2 : null;
 
+  // Per-period take-home cards
+  if (pp1) { document.getElementById('j-r-pp-takehome1').textContent = fmt(th1 / pp1); document.getElementById('j-r-pp-th1-sub').textContent = ppLabels[pp1] + ' after-tax pay'; }
+  else      { document.getElementById('j-r-pp-takehome1').textContent = '—'; document.getElementById('j-r-pp-th1-sub').textContent = 'Select a pay period'; }
+  if (pp2) { document.getElementById('j-r-pp-takehome2').textContent = fmt(th2 / pp2); document.getElementById('j-r-pp-th2-sub').textContent = ppLabels[pp2] + ' after-tax pay'; }
+  else      { document.getElementById('j-r-pp-takehome2').textContent = '—'; document.getElementById('j-r-pp-th2-sub').textContent = 'Select a pay period'; }
+
+  // Withholding analysis
   document.getElementById('j-ttw1').textContent = w1 != null && pp1 ? fmt(w1 * pp1) : '—';
   document.getElementById('j-req1').textContent = req1 != null ? fmt(req1) : '—';
   const d1 = document.getElementById('j-delta1');
@@ -1015,39 +1072,46 @@ function calcJoint() {
   const d2 = document.getElementById('j-delta2');
   if (w2 != null && pp2) { d2.textContent = fmtDelta(w2*pp2 - tax2); d2.style.color = deltaColor(w2*pp2 - tax2); } else d2.textContent = '—';
 
-  // Net position card — Salary 1
-  const nc1 = document.getElementById('j-net-card1');
-  const nv1 = document.getElementById('j-net-value1');
-  const ns1 = document.getElementById('j-net-sub1');
-  if (w1 != null && pp1 && req1 != null) {
-    const ppDelta1 = w1 - req1;
-    nc1.className = 'result-card ' + (ppDelta1 >= 0 ? 'net-over' : 'net-under');
-    nv1.textContent = (ppDelta1 >= 0 ? '+' : '') + fmt(ppDelta1);
-    ns1.textContent = ppDelta1 >= 0
-      ? 'Over-withheld per ' + ppLabels[pp1] + ' — expect refund'
-      : 'Under-withheld per ' + ppLabels[pp1] + ' — additional ' + fmt(Math.abs(ppDelta1)) + ' needed';
-  } else {
-    nc1.className = 'result-card';
-    nv1.textContent = '—';
-    ns1.textContent = w1 == null ? 'Enter current withheld amount' : 'Select a pay period';
+  // Helper to update a net position card + simulator outputs
+  function applyNetAndSim(effectiveWH, req, pp, adjRaw, netCardId, netValId, netSubId, simPosId, simRefId) {
+    const nc = document.getElementById(netCardId);
+    const nv = document.getElementById(netValId);
+    const ns = document.getElementById(netSubId);
+    if (effectiveWH != null && pp && req != null) {
+      const ppd = effectiveWH - req;
+      nc.className = 'result-card ' + (ppd >= 0 ? 'net-over' : 'net-under');
+      nv.textContent = (ppd >= 0 ? '+' : '') + fmt(ppd);
+      ns.textContent = ppd >= 0
+        ? 'Over-withheld per ' + ppLabels[pp] + ' — expect refund'
+        : 'Under-withheld — need ' + fmt(Math.abs(ppd)) + ' more per ' + ppLabels[pp];
+      if (adjRaw != null) ns.textContent += ' (simulated)';
+    } else {
+      nc.className = 'result-card';
+      nv.textContent = '—';
+      ns.textContent = effectiveWH == null ? 'Enter current withheld amount' : 'Select a pay period';
+    }
+    // Simulator mini-outputs
+    const spEl = document.getElementById(simPosId);
+    const srEl = document.getElementById(simRefId);
+    if (adjRaw != null && pp && req != null) {
+      const simAnnual = adjRaw * pp;
+      const simPos    = adjRaw - req;
+      const simRef    = simAnnual - (req * pp);
+      const col       = simPos >= 0 ? 'var(--green)' : 'var(--red)';
+      spEl.textContent = (simPos >= 0 ? '+' : '') + fmt(simPos) + ' / period';
+      spEl.style.color = col;
+      srEl.textContent = (simRef >= 0 ? '+' : '') + fmt(simRef);
+      srEl.style.color = col;
+    } else {
+      spEl.textContent = '—'; spEl.style.color = 'var(--text)';
+      srEl.textContent = '—'; srEl.style.color = 'var(--text)';
+    }
   }
 
-  // Net position card — Salary 2
-  const nc2 = document.getElementById('j-net-card2');
-  const nv2 = document.getElementById('j-net-value2');
-  const ns2 = document.getElementById('j-net-sub2');
-  if (w2 != null && pp2 && req2 != null) {
-    const ppDelta2 = w2 - req2;
-    nc2.className = 'result-card ' + (ppDelta2 >= 0 ? 'net-over' : 'net-under');
-    nv2.textContent = (ppDelta2 >= 0 ? '+' : '') + fmt(ppDelta2);
-    ns2.textContent = ppDelta2 >= 0
-      ? 'Over-withheld per ' + ppLabels[pp2] + ' — expect refund'
-      : 'Under-withheld per ' + ppLabels[pp2] + ' — additional ' + fmt(Math.abs(ppDelta2)) + ' needed';
-  } else {
-    nc2.className = 'result-card';
-    nv2.textContent = '—';
-    ns2.textContent = w2 == null ? 'Enter current withheld amount' : 'Select a pay period';
-  }
+  const eff1 = adj1 != null ? adj1 : w1;
+  const eff2 = adj2 != null ? adj2 : w2;
+  applyNetAndSim(eff1, req1, pp1, adj1, 'j-net-card1', 'j-net-value1', 'j-net-sub1', 'j-sim-pos1', 'j-sim-ref1');
+  applyNetAndSim(eff2, req2, pp2, adj2, 'j-net-card2', 'j-net-value2', 'j-net-sub2', 'j-sim-pos2', 'j-sim-ref2');
 
   jChart = drawChart('j-chart', jChart, combined, totalTax);
 }
