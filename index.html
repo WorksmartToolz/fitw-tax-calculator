@@ -425,23 +425,25 @@
 
       <div class="card">
         <div class="card-title">Tax Bracket Table</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-          Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket.
-          Upper Limit, Taxable Amount, and Tax Owed all calculate automatically.
-        </p>
 
         <!-- IRS Pre-fill buttons -->
-        <div style="margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Quick-fill IRS Official Brackets</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Select the tax year that matches your return. Fills all 7 brackets + standard deduction automatically.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div style="background:var(--blue-light);border:1.5px solid var(--blue-mid);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--blue-dark);margin-bottom:4px;">⚡ Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;color:var(--blue-dark);opacity:0.8;margin-bottom:10px;">Select the tax year matching your return — auto-fills all 7 brackets and standard deduction.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
             <button class="prefill-btn" id="s-btn-2024" onclick="prefill('s','2024-single')">2024 Single</button>
             <button class="prefill-btn" id="s-btn-2025" onclick="prefill('s','2025-single')">2025 Single</button>
             <button class="prefill-btn" id="s-btn-2026" onclick="prefill('s','2026-single')">2026 Single</button>
             <button class="prefill-btn prefill-clear" onclick="prefill('s','clear')">Clear</button>
           </div>
-          <div id="s-bracket-ref" style="display:none;margin-top:8px;padding:6px 10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:6px;font-size:11px;color:var(--blue-dark);font-weight:500;"></div>
+          <div id="s-bracket-ref" style="display:none;font-size:11px;color:var(--blue-dark);font-weight:600;"></div>
+          <div id="s-bracket-none" style="font-size:11px;color:var(--text-secondary);font-style:italic;">No year selected — click a year above or enter brackets manually below.</div>
         </div>
+
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
+          Or type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket manually.
+          Upper Limit, Taxable Amount, and Tax Owed all calculate automatically.
+        </p>
 
         <div class="bracket-scroll">
         <table class="bracket-table">
@@ -680,17 +682,22 @@
         </p>
 
         <!-- IRS Pre-fill buttons -->
-        <div style="margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Quick-fill IRS Official Brackets</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Select the tax year that matches your return. Fills all 7 brackets + standard deduction automatically.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div style="background:var(--blue-light);border:1.5px solid var(--blue-mid);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:600;color:var(--blue-dark);margin-bottom:4px;">⚡ Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;color:var(--blue-dark);opacity:0.8;margin-bottom:10px;">Select the tax year matching your return — auto-fills all 7 brackets and standard deduction.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
             <button class="prefill-btn" id="j-btn-2024" onclick="prefill('j','2024-joint')">2024 MFJ</button>
             <button class="prefill-btn" id="j-btn-2025" onclick="prefill('j','2025-joint')">2025 MFJ</button>
             <button class="prefill-btn" id="j-btn-2026" onclick="prefill('j','2026-joint')">2026 MFJ</button>
             <button class="prefill-btn prefill-clear" onclick="prefill('j','clear')">Clear</button>
           </div>
-          <div id="j-bracket-ref" style="display:none;margin-top:8px;padding:6px 10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:6px;font-size:11px;color:var(--blue-dark);font-weight:500;"></div>
+          <div id="j-bracket-ref" style="display:none;font-size:11px;color:var(--blue-dark);font-weight:600;"></div>
+          <div id="j-bracket-none" style="font-size:11px;color:var(--text-secondary);font-style:italic;">No year selected — click a year above or enter brackets manually below.</div>
         </div>
+
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
+          Or type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket manually — all other columns auto-calculate.
+        </p>
 
         <div class="bracket-scroll">
         <table class="bracket-table">
@@ -1356,22 +1363,23 @@ function prefill(tab, key) {
   if (key === 'clear') {
     for (let i = 0; i < 7; i++) bracketArr[i] = null;
     refEl.style.display = 'none';
+    const noneEl = document.getElementById(tab + '-bracket-none');
+    if (noneEl) noneEl.style.display = '';
     const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
     document.getElementById(dedId).value = '';
   } else {
     const data = IRS_BRACKETS[key];
     for (let i = 0; i < 7; i++) bracketArr[i] = data.lowers[i];
 
-    // Auto-fill standard deduction
     const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
     document.getElementById(dedId).value = data.stdDed.toLocaleString();
 
-    // Show confirmation label
     refEl.style.display = 'block';
     refEl.textContent = '✓ Loaded: ' + data.label;
+    const noneEl = document.getElementById(tab + '-bracket-none');
+    if (noneEl) noneEl.style.display = 'none';
 
-    // Mark the clicked button active
-    const yr = key.split('-')[0];  // '2024', '2025', '2026'
+    const yr = key.split('-')[0];
     const btn = document.getElementById(tab + '-btn-' + yr);
     if (btn) btn.classList.add('active');
   }
