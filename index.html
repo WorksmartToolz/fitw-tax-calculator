@@ -185,30 +185,32 @@
   .result-sub { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
   .result-card.highlight .result-sub { color: rgba(255,255,255,0.65); }
 
-  /* BRACKET TABLE */
-  .bracket-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  /* BRACKET TABLE — scrollable wrapper */
+  .bracket-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+  .bracket-table { width: 100%; min-width: 380px; border-collapse: collapse; font-size: 12px; }
   .bracket-table th {
-    text-align: left; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    text-align: left; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.4px;
     color: var(--text-secondary);
-    padding: 8px 8px; border-bottom: 1.5px solid var(--border);
+    padding: 7px 6px; border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
   }
-  .bracket-table td { padding: 8px 8px; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .bracket-table td { padding: 7px 6px; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 11px; white-space: nowrap; }
   .bracket-table tbody tr:last-child td { border-bottom: none; }
   .bracket-table tbody tr:hover { background: var(--bg); }
   .bracket-table tbody tr.active-bracket { background: var(--blue-light); }
   .bracket-table tbody tr.active-bracket td { color: var(--blue-dark); font-weight: 500; }
-  .rate-cell { font-weight: 600; color: var(--blue); font-size: 13px; }
+  .rate-cell { font-weight: 700; color: var(--blue); font-size: 12px; }
 
   /* Bracket lower-limit: plain text, no spinners */
   .bracket-input {
     background: var(--input-bg);
     border: 1.5px solid var(--input-border);
     border-radius: 6px;
-    padding: 5px 8px;
-    width: 90px;
+    padding: 4px 6px;
+    width: 82px;
     font-family: 'DM Mono', monospace;
-    font-size: 12px; font-weight: 600;
+    font-size: 11px; font-weight: 600;
     color: var(--blue-dark);
     outline: none;
   }
@@ -273,9 +275,6 @@
     .header-badge { display: none; }
     .pp-grid { grid-template-columns: repeat(2,1fr); }
     .salary-row { grid-template-columns: 1fr; }
-    /* hide Taxable Amt column on small screens to keep table readable */
-    .bracket-table th:nth-child(4),
-    .bracket-table td:nth-child(4) { display: none; }
   }
   @media (max-width: 420px) {
     .results-grid { grid-template-columns: 1fr; }
@@ -357,6 +356,7 @@
           Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket.
           Upper Limit, Taxable Amount, and Tax Owed all calculate automatically.
         </p>
+        <div class="bracket-scroll">
         <table class="bracket-table">
           <thead>
             <tr>
@@ -369,6 +369,7 @@
           </thead>
           <tbody id="s-bracket-body"></tbody>
         </table>
+        </div>
         <div style="margin-top:10px;font-size:11px;color:var(--text-secondary);">
           <span style="display:inline-block;width:10px;height:10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>
           Highlighted row = your active bracket
@@ -378,14 +379,7 @@
 
     <!-- RIGHT -->
     <div class="right-col">
-      <div id="s-results-empty" class="card">
-        <div class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3"/><path d="M9 15h3l8.5-8.5a1.5 1.5 0 0 0-3-3L9 12v3"/><path d="M16 5l3 3"/></svg>
-          <p>Enter your salary, deduction, and<br>all seven bracket lower limits to begin</p>
-        </div>
-      </div>
-
-      <div id="s-results-main" style="display:none;flex-direction:column;gap:18px;">
+      <div id="s-results-main" style="display:flex;flex-direction:column;gap:18px;">
         <div class="results-grid">
           <div class="result-card highlight">
             <div class="result-label">Total Tax Obligation</div>
@@ -429,7 +423,7 @@
             <div class="pp-card" id="s-pp-monthly">  <div class="pp-label">Monthly</div>      <div class="pp-value" id="s-pp-monthly-val">—</div></div>
           </div>
 
-          <div id="s-delta-wrap" style="display:none;margin-top:16px;">
+          <div id="s-delta-wrap" style="margin-top:16px;">
             <div class="divider" style="margin:0 0 12px;"></div>
             <div class="section-label">Withholding Analysis</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
@@ -541,6 +535,7 @@
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
           Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket — all other columns auto-calculate.
         </p>
+        <div class="bracket-scroll">
         <table class="bracket-table">
           <thead>
             <tr>
@@ -553,19 +548,13 @@
           </thead>
           <tbody id="j-bracket-body"></tbody>
         </table>
+        </div>
       </div>
     </div>
 
     <!-- RIGHT -->
     <div class="right-col">
-      <div id="j-results-empty" class="card">
-        <div class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3"/><path d="M9 15h3l8.5-8.5a1.5 1.5 0 0 0-3-3L9 12v3"/><path d="M16 5l3 3"/></svg>
-          <p>Enter combined salaries, deduction, and<br>all seven bracket lower limits to begin</p>
-        </div>
-      </div>
-
-      <div id="j-results-main" style="display:none;flex-direction:column;gap:18px;">
+      <div id="j-results-main" style="display:flex;flex-direction:column;gap:18px;">
         <div class="results-grid">
           <div class="result-card highlight">
             <div class="result-label">Total Tax Obligation</div>
@@ -839,10 +828,7 @@ function calcSingle() {
 
   buildBracketTable('s-bracket-body', sBrackets, 's', taxable);
 
-  const emptyEl = document.getElementById('s-results-empty');
-  const mainEl  = document.getElementById('s-results-main');
-  if (!canCalc) { emptyEl.style.display = ''; mainEl.style.display = 'none'; return; }
-  emptyEl.style.display = 'none'; mainEl.style.display = 'flex';
+  if (!canCalc) return;
 
   const totalTax = computeTax(taxable, sBrackets);
   const takeHome = salary - totalTax;
@@ -866,7 +852,6 @@ function calcSingle() {
   if (ppMap[pp]) document.getElementById(ppMap[pp]).classList.add('active-pp');
 
   if (withheld != null) {
-    document.getElementById('s-delta-wrap').style.display = '';
     const ttw   = withheld * pp;
     const delta = ttw - totalTax;
     document.getElementById('s-ttw').textContent     = fmt(ttw);
@@ -875,7 +860,10 @@ function calcSingle() {
     dEl.textContent = fmtDelta(delta);
     dEl.style.color = deltaColor(delta);
   } else {
-    document.getElementById('s-delta-wrap').style.display = 'none';
+    document.getElementById('s-ttw').textContent     = '—';
+    document.getElementById('s-req-ded').textContent = fmt(totalTax / pp);
+    document.getElementById('s-delta').textContent   = '—';
+    document.getElementById('s-delta').style.color   = 'var(--text)';
   }
 
   sChart = drawChart('s-chart', sChart, salary, totalTax);
@@ -899,10 +887,7 @@ function calcJoint() {
 
   buildBracketTable('j-bracket-body', jBrackets, 'j', taxable);
 
-  const emptyEl = document.getElementById('j-results-empty');
-  const mainEl  = document.getElementById('j-results-main');
-  if (!canCalc) { emptyEl.style.display = ''; mainEl.style.display = 'none'; return; }
-  emptyEl.style.display = 'none'; mainEl.style.display = 'flex';
+  if (!canCalc) return;
 
   const totalTax = computeTax(taxable, jBrackets);
   const takeHome = combined - totalTax;
