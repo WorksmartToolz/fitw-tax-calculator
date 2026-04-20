@@ -220,6 +220,53 @@
     background: white;
   }
 
+  /* DISCLAIMER CARD */
+  .disclaimer-card {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-left: 4px solid #f59e0b;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .disclaimer-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .disclaimer-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 8px;
+    letter-spacing: -0.1px;
+  }
+  .disclaimer-body {
+    font-size: 12px;
+    color: #78350f;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .disclaimer-list {
+    margin: 0 0 10px 16px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .disclaimer-list li {
+    font-size: 12px;
+    color: #78350f;
+    line-height: 1.5;
+  }
+  .disclaimer-footer {
+    font-size: 11px;
+    color: #92400e;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0;
+    padding-top: 8px;
+    border-top: 1px solid #fcd34d;
+  }
+
   /* NET POSITION CARD — dynamic green/red */
   .result-card.net-over  { border-left: 3px solid var(--green); }
   .result-card.net-over  .result-value { color: var(--green); }
@@ -492,6 +539,26 @@
             <div class="legend-item"><div class="legend-dot" style="background:#e0e9ff;"></div>Take-Home</div>
           </div>
         </div>
+
+        <div class="disclaimer-card">
+          <div class="disclaimer-icon">⚠️</div>
+          <div>
+            <div class="disclaimer-title">Federal Income Tax Only — Additional Deductions Not Reflected</div>
+            <p class="disclaimer-body">
+              This calculator estimates your <strong>federal income tax (FITW) burden only</strong> based on the tax brackets and standard deduction you enter. The take-home and per-period values shown do <strong>not</strong> account for other mandatory payroll deductions that will further reduce your actual net pay, including:
+            </p>
+            <ul class="disclaimer-list">
+              <li><strong>Social Security Tax</strong> — 6.2% of gross wages (employee share, up to the annual wage base)</li>
+              <li><strong>Medicare Tax</strong> — 1.45% of gross wages (employee share); an additional 0.9% applies above $200,000</li>
+              <li><strong>State Income Tax</strong> — varies by state; some states have no income tax</li>
+              <li><strong>State Disability Insurance (SDI)</strong> — applicable in certain states (e.g. California, New York)</li>
+              <li><strong>Other deductions</strong> — health insurance premiums, 401(k) contributions, HSA, etc.</li>
+            </ul>
+            <p class="disclaimer-footer">
+              Your real take-home pay will be lower than shown once these are factored in. Consult your pay stub or a tax professional for a complete picture of your net compensation.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -700,6 +767,26 @@
           <div class="legend">
             <div class="legend-item"><div class="legend-dot" style="background:#1a56db;"></div>Federal Tax</div>
             <div class="legend-item"><div class="legend-dot" style="background:#e0e9ff;"></div>Take-Home</div>
+          </div>
+        </div>
+
+        <div class="disclaimer-card">
+          <div class="disclaimer-icon">⚠️</div>
+          <div>
+            <div class="disclaimer-title">Federal Income Tax Only — Additional Deductions Not Reflected</div>
+            <p class="disclaimer-body">
+              This calculator estimates your <strong>federal income tax (FITW) burden only</strong> based on the tax brackets and standard deduction you enter. The take-home and per-period values shown do <strong>not</strong> account for other mandatory payroll deductions that will further reduce your actual net pay, including:
+            </p>
+            <ul class="disclaimer-list">
+              <li><strong>Social Security Tax</strong> — 6.2% of gross wages (employee share, up to the annual wage base)</li>
+              <li><strong>Medicare Tax</strong> — 1.45% of gross wages (employee share); an additional 0.9% applies above $200,000</li>
+              <li><strong>State Income Tax</strong> — varies by state; some states have no income tax</li>
+              <li><strong>State Disability Insurance (SDI)</strong> — applicable in certain states (e.g. California, New York)</li>
+              <li><strong>Other deductions</strong> — health insurance premiums, 401(k) contributions, HSA, etc.</li>
+            </ul>
+            <p class="disclaimer-footer">
+              Your real take-home pay will be lower than shown once these are factored in. Consult your pay stub or a tax professional for a complete picture of your net compensation.
+            </p>
           </div>
         </div>
       </div>
