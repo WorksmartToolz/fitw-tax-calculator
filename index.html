@@ -432,14 +432,15 @@
 
         <!-- IRS Pre-fill buttons -->
         <div style="margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Select the tax year that matches your return. Fills all 7 brackets + standard deduction automatically.</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="prefill-btn" onclick="prefill('s','2024-single')">2024 Single</button>
-            <button class="prefill-btn" onclick="prefill('s','2025-single')">2025 Single</button>
-            <button class="prefill-btn" onclick="prefill('s','2026-single')">2026 Single</button>
+            <button class="prefill-btn" id="s-btn-2024" onclick="prefill('s','2024-single')">2024 Single</button>
+            <button class="prefill-btn" id="s-btn-2025" onclick="prefill('s','2025-single')">2025 Single</button>
+            <button class="prefill-btn" id="s-btn-2026" onclick="prefill('s','2026-single')">2026 Single</button>
             <button class="prefill-btn prefill-clear" onclick="prefill('s','clear')">Clear</button>
           </div>
-          <div id="s-bracket-ref" style="display:none;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:'DM Mono',monospace;line-height:1.7;"></div>
+          <div id="s-bracket-ref" style="display:none;margin-top:8px;padding:6px 10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:6px;font-size:11px;color:var(--blue-dark);font-weight:500;"></div>
         </div>
 
         <div class="bracket-scroll">
@@ -680,14 +681,15 @@
 
         <!-- IRS Pre-fill buttons -->
         <div style="margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Quick-fill IRS Official Brackets</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">Select the tax year that matches your return. Fills all 7 brackets + standard deduction automatically.</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="prefill-btn" onclick="prefill('j','2024-joint')">2024 MFJ</button>
-            <button class="prefill-btn" onclick="prefill('j','2025-joint')">2025 MFJ</button>
-            <button class="prefill-btn" onclick="prefill('j','2026-joint')">2026 MFJ</button>
+            <button class="prefill-btn" id="j-btn-2024" onclick="prefill('j','2024-joint')">2024 MFJ</button>
+            <button class="prefill-btn" id="j-btn-2025" onclick="prefill('j','2025-joint')">2025 MFJ</button>
+            <button class="prefill-btn" id="j-btn-2026" onclick="prefill('j','2026-joint')">2026 MFJ</button>
             <button class="prefill-btn prefill-clear" onclick="prefill('j','clear')">Clear</button>
           </div>
-          <div id="j-bracket-ref" style="display:none;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:'DM Mono',monospace;line-height:1.7;"></div>
+          <div id="j-bracket-ref" style="display:none;margin-top:8px;padding:6px 10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:6px;font-size:11px;color:var(--blue-dark);font-weight:500;"></div>
         </div>
 
         <div class="bracket-scroll">
@@ -1352,14 +1354,18 @@ function prefill(tab, key) {
   const bracketArr = tab === 's' ? sBrackets : jBrackets;
   const refEl      = document.getElementById(tab + '-bracket-ref');
 
-  // Reset active state on all buttons in this tab's bracket card
-  document.querySelectorAll('#panel-' + (tab === 's' ? 'single' : 'joint') + ' .prefill-btn')
-    .forEach(b => b.classList.remove('active'));
+  // Clear all button active states for this tab
+  ['2024','2025','2026'].forEach(yr => {
+    const suffix = tab === 's' ? ['single'] : ['joint'];
+    suffix.forEach(s => {
+      const btn = document.getElementById(tab + '-btn-' + yr);
+      if (btn) btn.classList.remove('active');
+    });
+  });
 
   if (key === 'clear') {
     for (let i = 0; i < 7; i++) bracketArr[i] = null;
     refEl.style.display = 'none';
-    // Clear deduction field for this tab
     const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
     document.getElementById(dedId).value = '';
   } else {
@@ -1370,15 +1376,16 @@ function prefill(tab, key) {
     const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
     document.getElementById(dedId).value = data.stdDed.toLocaleString();
 
-    // Show reference label
+    // Show confirmation label
     refEl.style.display = 'block';
-    refEl.textContent = '✓ ' + data.label;
+    refEl.textContent = '✓ Loaded: ' + data.label;
 
-    // Mark button active
-    event.target.classList.add('active');
+    // Mark the clicked button active
+    const yr = key.split('-')[0];  // '2024', '2025', '2026'
+    const btn = document.getElementById(tab + '-btn-' + yr);
+    if (btn) btn.classList.add('active');
   }
 
-  // Rebuild table with new values and recalculate
   if (tab === 's') { buildBracketTable('s-bracket-body', sBrackets, 's', null); calcSingle(); }
   else             { buildBracketTable('j-bracket-body', jBrackets, 'j', null); calcJoint();  }
 }
