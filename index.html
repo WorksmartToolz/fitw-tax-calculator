@@ -220,6 +220,25 @@
     background: white;
   }
 
+  /* PREFILL BUTTONS */
+  .prefill-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1.5px solid var(--blue-mid);
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .prefill-btn:hover { background: var(--blue); color: white; border-color: var(--blue); }
+  .prefill-btn.prefill-clear { background: var(--bg); border-color: var(--border); color: var(--text-secondary); }
+  .prefill-btn.prefill-clear:hover { background: var(--red); color: white; border-color: var(--red); }
+  .prefill-btn.active { background: var(--blue); color: white; border-color: var(--blue-dark); }
+
   /* DISCLAIMER CARD */
   .disclaimer-card {
     background: #fffbeb;
@@ -406,10 +425,22 @@
 
       <div class="card">
         <div class="card-title">Tax Bracket Table</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
           Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket.
           Upper Limit, Taxable Amount, and Tax Owed all calculate automatically.
         </p>
+
+        <!-- IRS Pre-fill buttons -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Quick-fill IRS Official Brackets</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="prefill-btn" onclick="prefill('s','2024-single')">2024 Single</button>
+            <button class="prefill-btn" onclick="prefill('s','2025-single')">2025 Single</button>
+            <button class="prefill-btn prefill-clear" onclick="prefill('s','clear')">Clear</button>
+          </div>
+          <div id="s-bracket-ref" style="display:none;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:'DM Mono',monospace;line-height:1.7;"></div>
+        </div>
+
         <div class="bracket-scroll">
         <table class="bracket-table">
           <thead>
@@ -642,9 +673,21 @@
 
       <div class="card">
         <div class="card-title">Tax Bracket Table (MFJ)</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
           Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket — all other columns auto-calculate.
         </p>
+
+        <!-- IRS Pre-fill buttons -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Quick-fill IRS Official Brackets</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="prefill-btn" onclick="prefill('j','2024-joint')">2024 MFJ</button>
+            <button class="prefill-btn" onclick="prefill('j','2025-joint')">2025 MFJ</button>
+            <button class="prefill-btn prefill-clear" onclick="prefill('j','clear')">Clear</button>
+          </div>
+          <div id="j-bracket-ref" style="display:none;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:'DM Mono',monospace;line-height:1.7;"></div>
+        </div>
+
         <div class="bracket-scroll">
         <table class="bracket-table">
           <thead>
@@ -658,6 +701,10 @@
           </thead>
           <tbody id="j-bracket-body"></tbody>
         </table>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-secondary);">
+          <span style="display:inline-block;width:10px;height:10px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:2px;margin-right:4px;vertical-align:middle;"></span>
+          Highlighted row = your active bracket
         </div>
       </div>
     </div>
@@ -1239,6 +1286,73 @@ function calcJoint() {
   applyNetAndSim(w2, req2, pp2, adj2, 'j-net-card2', 'j-net-value2', 'j-net-sub2', 'j-sim-pos2', 'j-sim-ref2');
 
   jChart = drawChart('j-chart', jChart, combined, totalTax);
+}
+
+// ══════════════════════════════════════════════
+//  IRS BRACKET PREFILL
+//  Lower limits = exact IRS bracket start values
+//  Range = from lower limit up to (but not including) next bracket's start
+// ══════════════════════════════════════════════
+const IRS_BRACKETS = {
+  // 2024 Single / MFS  (source: IRS Rev. Proc. 2023-34)
+  '2024-single': {
+    lowers: [0, 11601, 47151, 100526, 191951, 243726, 609351],
+    stdDed: 14600,
+    label: '2024 Single — Standard Deduction: $14,600'
+  },
+  // 2025 Single / MFS  (source: IRS Rev. Proc. 2024-40)
+  '2025-single': {
+    lowers: [0, 11926, 48476, 103351, 197301, 250526, 626351],
+    stdDed: 15000,
+    label: '2025 Single — Standard Deduction: $15,000'
+  },
+  // 2024 Married Filing Jointly
+  '2024-joint': {
+    lowers: [0, 23201, 94301, 201051, 383901, 487451, 731201],
+    stdDed: 29200,
+    label: '2024 MFJ — Standard Deduction: $29,200'
+  },
+  // 2025 Married Filing Jointly
+  '2025-joint': {
+    lowers: [0, 23851, 96951, 206701, 394601, 501051, 751601],
+    stdDed: 30000,
+    label: '2025 MFJ — Standard Deduction: $30,000'
+  }
+};
+
+function prefill(tab, key) {
+  const bracketArr = tab === 's' ? sBrackets : jBrackets;
+  const refEl      = document.getElementById(tab + '-bracket-ref');
+
+  // Reset active state on all buttons in this tab's bracket card
+  document.querySelectorAll('#panel-' + (tab === 's' ? 'single' : 'joint') + ' .prefill-btn')
+    .forEach(b => b.classList.remove('active'));
+
+  if (key === 'clear') {
+    for (let i = 0; i < 7; i++) bracketArr[i] = null;
+    refEl.style.display = 'none';
+    // Clear deduction field for this tab
+    const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
+    document.getElementById(dedId).value = '';
+  } else {
+    const data = IRS_BRACKETS[key];
+    for (let i = 0; i < 7; i++) bracketArr[i] = data.lowers[i];
+
+    // Auto-fill standard deduction
+    const dedId = tab === 's' ? 's-deduction' : 'j-deduction';
+    document.getElementById(dedId).value = data.stdDed.toLocaleString();
+
+    // Show reference label
+    refEl.style.display = 'block';
+    refEl.textContent = '✓ ' + data.label;
+
+    // Mark button active
+    event.target.classList.add('active');
+  }
+
+  // Rebuild table with new values and recalculate
+  if (tab === 's') { buildBracketTable('s-bracket-body', sBrackets, 's', null); calcSingle(); }
+  else             { buildBracketTable('j-bracket-body', jBrackets, 'j', null); calcJoint();  }
 }
 
 // ══════════════════════════════════════════════
