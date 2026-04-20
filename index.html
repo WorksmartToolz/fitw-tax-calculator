@@ -460,7 +460,7 @@
 
             <div class="divider" style="margin:14px 0 12px;"></div>
             <div class="section-label" style="margin-bottom:6px;">Withholding Simulator</div>
-            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;">Enter a proposed per-period withholding amount to see how it shifts your position.</p>
+            <p style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;">Enter an <strong>additional</strong> per-period amount to add to your current withholding and see how it shifts your position.</p>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <div class="input-wrap" style="width:160px;flex-shrink:0;">
                 <span class="prefix">$</span>
@@ -663,10 +663,10 @@
                 <div><div style="font-size:11px;color:var(--text-secondary);">Refund / Due</div><div style="font-family:'DM Mono',monospace;font-size:14px;" id="j-delta1">—</div></div>
               </div>
               <div class="divider" style="margin:12px 0 10px;"></div>
-              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator</div>
+              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator — Additional Amt</div>
               <div class="input-wrap" style="max-width:140px;margin-bottom:8px;">
                 <span class="prefix">$</span>
-                <input class="currency-input" id="j-adj1" placeholder="Proposed amt" inputmode="numeric" style="height:36px;font-size:12px;">
+                <input class="currency-input" id="j-adj1" placeholder="Add to withheld" inputmode="numeric" style="height:36px;font-size:12px;">
               </div>
               <div style="display:flex;flex-direction:column;gap:4px;">
                 <div style="font-size:10px;color:var(--text-secondary);">Sim. Position: <span style="font-family:'DM Mono',monospace;font-weight:600;" id="j-sim-pos1">—</span></div>
@@ -681,10 +681,10 @@
                 <div><div style="font-size:11px;color:var(--text-secondary);">Refund / Due</div><div style="font-family:'DM Mono',monospace;font-size:14px;" id="j-delta2">—</div></div>
               </div>
               <div class="divider" style="margin:12px 0 10px;"></div>
-              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator</div>
+              <div style="font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Simulator — Additional Amt</div>
               <div class="input-wrap" style="max-width:140px;margin-bottom:8px;">
                 <span class="prefix">$</span>
-                <input class="currency-input" id="j-adj2" placeholder="Proposed amt" inputmode="numeric" style="height:36px;font-size:12px;">
+                <input class="currency-input" id="j-adj2" placeholder="Add to withheld" inputmode="numeric" style="height:36px;font-size:12px;">
               </div>
               <div style="display:flex;flex-direction:column;gap:4px;">
                 <div style="font-size:10px;color:var(--text-secondary);">Sim. Position: <span style="font-family:'DM Mono',monospace;font-weight:600;" id="j-sim-pos2">—</span></div>
@@ -948,8 +948,10 @@ function calcSingle() {
     document.getElementById('s-r-pp-takehome-sub').textContent = 'Select a pay period';
   }
 
-  // Withholding analysis — use adjWH as effective withheld if set, fall back to withheld
-  const effectiveWH = adjWH != null ? adjWH : withheld;
+  // Withholding analysis — effective = current + adjustment (simulator adds to base)
+  const simmedTotal = (withheld != null && adjWH != null) ? withheld + adjWH
+                    : (adjWH != null)                     ? adjWH
+                    : withheld;
 
   document.getElementById('s-req-ded').textContent = reqPerPeriod != null ? fmt(reqPerPeriod) : '—';
 
@@ -966,13 +968,13 @@ function calcSingle() {
     document.getElementById('s-delta').style.color = 'var(--text)';
   }
 
-  // Net position card — driven by simulator if active, otherwise current withheld
+  // Net position card — driven by simmedTotal (current + adj) if simulator active, else current withheld
   const netCard = document.getElementById('s-net-card');
   const netVal  = document.getElementById('s-net-value');
   const netSub  = document.getElementById('s-net-sub');
 
-  if (effectiveWH != null && pp && reqPerPeriod != null) {
-    const ppDelta = effectiveWH - reqPerPeriod;
+  if (simmedTotal != null && pp && reqPerPeriod != null) {
+    const ppDelta = simmedTotal - reqPerPeriod;
     netCard.className = 'result-card ' + (ppDelta >= 0 ? 'net-over' : 'net-under');
     netVal.textContent = (ppDelta >= 0 ? '+' : '') + fmt(ppDelta);
     netSub.textContent = ppDelta >= 0
@@ -985,11 +987,12 @@ function calcSingle() {
     netSub.textContent = withheld == null ? 'Enter current withheld amount' : 'Select a pay period';
   }
 
-  // Simulator outputs
+  // Simulator outputs — based on current withheld + adjustment
   if (adjWH != null && pp && reqPerPeriod != null) {
-    const simAnnual   = adjWH * pp;
-    const simPosDelta = adjWH - reqPerPeriod;
-    const simRefund   = simAnnual - totalTax;
+    const newTotal    = simmedTotal;                  // withheld + adj (or just adj if no base)
+    const simAnnual   = newTotal * pp;
+    const simPosDelta = newTotal - reqPerPeriod;      // per-period over/under
+    const simRefund   = simAnnual - totalTax;         // annual over/under
     const posColor    = simPosDelta >= 0 ? 'var(--green)' : 'var(--red)';
 
     document.getElementById('s-sim-annual').textContent   = fmt(simAnnual);
@@ -1072,8 +1075,12 @@ function calcJoint() {
   const d2 = document.getElementById('j-delta2');
   if (w2 != null && pp2) { d2.textContent = fmtDelta(w2*pp2 - tax2); d2.style.color = deltaColor(w2*pp2 - tax2); } else d2.textContent = '—';
 
-  // Helper to update a net position card + simulator outputs
-  function applyNetAndSim(effectiveWH, req, pp, adjRaw, netCardId, netValId, netSubId, simPosId, simRefId) {
+  // Helper: netCardId gets position based on (baseWH + adj). adjRaw is the additional amount.
+  function applyNetAndSim(baseWH, req, pp, adjRaw, netCardId, netValId, netSubId, simPosId, simRefId) {
+    const simmedWH = (baseWH != null && adjRaw != null) ? baseWH + adjRaw
+                   : (adjRaw != null)                   ? adjRaw
+                   : baseWH;
+    const effectiveWH = simmedWH;
     const nc = document.getElementById(netCardId);
     const nv = document.getElementById(netValId);
     const ns = document.getElementById(netSubId);
@@ -1094,10 +1101,10 @@ function calcJoint() {
     const spEl = document.getElementById(simPosId);
     const srEl = document.getElementById(simRefId);
     if (adjRaw != null && pp && req != null) {
-      const simAnnual = adjRaw * pp;
-      const simPos    = adjRaw - req;
-      const simRef    = simAnnual - (req * pp);
-      const col       = simPos >= 0 ? 'var(--green)' : 'var(--red)';
+      const newTotal = simmedWH;
+      const simPos   = newTotal - req;
+      const simRef   = (newTotal * pp) - (req * pp);
+      const col      = simPos >= 0 ? 'var(--green)' : 'var(--red)';
       spEl.textContent = (simPos >= 0 ? '+' : '') + fmt(simPos) + ' / period';
       spEl.style.color = col;
       srEl.textContent = (simRef >= 0 ? '+' : '') + fmt(simRef);
@@ -1108,10 +1115,8 @@ function calcJoint() {
     }
   }
 
-  const eff1 = adj1 != null ? adj1 : w1;
-  const eff2 = adj2 != null ? adj2 : w2;
-  applyNetAndSim(eff1, req1, pp1, adj1, 'j-net-card1', 'j-net-value1', 'j-net-sub1', 'j-sim-pos1', 'j-sim-ref1');
-  applyNetAndSim(eff2, req2, pp2, adj2, 'j-net-card2', 'j-net-value2', 'j-net-sub2', 'j-sim-pos2', 'j-sim-ref2');
+  applyNetAndSim(w1, req1, pp1, adj1, 'j-net-card1', 'j-net-value1', 'j-net-sub1', 'j-sim-pos1', 'j-sim-ref1');
+  applyNetAndSim(w2, req2, pp2, adj2, 'j-net-card2', 'j-net-value2', 'j-net-sub2', 'j-sim-pos2', 'j-sim-ref2');
 
   jChart = drawChart('j-chart', jChart, combined, totalTax);
 }
