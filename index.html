@@ -220,6 +220,12 @@
     background: white;
   }
 
+  /* NET POSITION CARD — dynamic green/red */
+  .result-card.net-over  { border-left: 3px solid var(--green); }
+  .result-card.net-over  .result-value { color: var(--green); }
+  .result-card.net-under { border-left: 3px solid var(--red); }
+  .result-card.net-under .result-value { color: var(--red); }
+
   /* RATE BAR */
   .rate-bar-bg { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; margin-top: 6px; }
   .rate-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue-light), var(--blue)); border-radius: 10px; transition: width 0.4s ease; }
@@ -333,8 +339,9 @@
         <div class="field">
           <label>Pay Period</label>
           <select id="s-payperiod" onchange="calcSingle()">
+            <option value="" selected disabled>— Select Pay Period —</option>
             <option value="52">Weekly (52×)</option>
-            <option value="26" selected>Bi-Weekly (26×)</option>
+            <option value="26">Bi-Weekly (26×)</option>
             <option value="24">Semi-Monthly (24×)</option>
             <option value="12">Monthly (12×)</option>
           </select>
@@ -400,6 +407,16 @@
             <div class="result-label">Effective Tax Rate</div>
             <div class="result-value" id="s-r-eff-rate">—</div>
             <div class="result-sub" id="s-r-marginal">Marginal: —</div>
+          </div>
+          <div class="result-card positive">
+            <div class="result-label">Per-Period Take-Home</div>
+            <div class="result-value" id="s-r-pp-takehome">—</div>
+            <div class="result-sub" id="s-r-pp-takehome-sub">Select a pay period</div>
+          </div>
+          <div class="result-card" id="s-net-card">
+            <div class="result-label" id="s-net-label">Withholding Position</div>
+            <div class="result-value" id="s-net-value">—</div>
+            <div class="result-sub" id="s-net-sub">Enter current withheld amount</div>
           </div>
         </div>
 
@@ -495,8 +512,9 @@
         <div class="field">
           <label>Pay Period</label>
           <select id="j-payperiod1" onchange="calcJoint()">
+            <option value="" selected disabled>— Select Pay Period —</option>
             <option value="52">Weekly (52×)</option>
-            <option value="26" selected>Bi-Weekly (26×)</option>
+            <option value="26">Bi-Weekly (26×)</option>
             <option value="24">Semi-Monthly (24×)</option>
             <option value="12">Monthly (12×)</option>
           </select>
@@ -515,8 +533,9 @@
         <div class="field">
           <label>Pay Period</label>
           <select id="j-payperiod2" onchange="calcJoint()">
+            <option value="" selected disabled>— Select Pay Period —</option>
             <option value="52">Weekly (52×)</option>
-            <option value="26" selected>Bi-Weekly (26×)</option>
+            <option value="26">Bi-Weekly (26×)</option>
             <option value="24">Semi-Monthly (24×)</option>
             <option value="12">Monthly (12×)</option>
           </select>
@@ -575,6 +594,26 @@
             <div class="result-label">Effective Tax Rate</div>
             <div class="result-value" id="j-r-eff-rate">—</div>
             <div class="result-sub" id="j-r-marginal">Marginal: —</div>
+          </div>
+          <div class="result-card positive">
+            <div class="result-label">Salary 1 Per-Period Take-Home</div>
+            <div class="result-value" id="j-r-pp-takehome1">—</div>
+            <div class="result-sub" id="j-r-pp-th1-sub">Select a pay period</div>
+          </div>
+          <div class="result-card positive">
+            <div class="result-label">Salary 2 Per-Period Take-Home</div>
+            <div class="result-value" id="j-r-pp-takehome2">—</div>
+            <div class="result-sub" id="j-r-pp-th2-sub">Select a pay period</div>
+          </div>
+          <div class="result-card" id="j-net-card1">
+            <div class="result-label">Salary 1 Withholding Position</div>
+            <div class="result-value" id="j-net-value1">—</div>
+            <div class="result-sub" id="j-net-sub1">Enter current withheld amount</div>
+          </div>
+          <div class="result-card" id="j-net-card2">
+            <div class="result-label">Salary 2 Withholding Position</div>
+            <div class="result-value" id="j-net-value2">—</div>
+            <div class="result-sub" id="j-net-sub2">Enter current withheld amount</div>
           </div>
         </div>
 
@@ -820,7 +859,8 @@ function drawChart(canvasId, old, salary, tax) {
 function calcSingle() {
   const salary    = getRaw(document.getElementById('s-salary'));
   const deduction = getRaw(document.getElementById('s-deduction'));
-  const pp        = parseInt(document.getElementById('s-payperiod').value);
+  const ppEl      = document.getElementById('s-payperiod');
+  const pp        = ppEl.value ? parseInt(ppEl.value) : null;
   const withheld  = getRaw(document.getElementById('s-withheld'));
 
   const taxable  = (salary != null && deduction != null) ? Math.max(0, salary - deduction) : null;
@@ -843,27 +883,58 @@ function calcSingle() {
   document.getElementById('s-eff-label').textContent   = fmtPct(effRate);
   document.getElementById('s-rate-bar').style.width    = Math.min(100, effRate / 0.37 * 100) + '%';
 
+  // Pay period tax impact grid
   const ppMap = { 52:'s-pp-weekly', 26:'s-pp-biweekly', 24:'s-pp-semi', 12:'s-pp-monthly' };
   Object.values(ppMap).forEach(id => document.getElementById(id).classList.remove('active-pp'));
   document.getElementById('s-pp-weekly-val').textContent   = fmt(totalTax / 52);
   document.getElementById('s-pp-biweekly-val').textContent = fmt(totalTax / 26);
   document.getElementById('s-pp-semi-val').textContent     = fmt(totalTax / 24);
   document.getElementById('s-pp-monthly-val').textContent  = fmt(totalTax / 12);
-  if (ppMap[pp]) document.getElementById(ppMap[pp]).classList.add('active-pp');
+  if (pp && ppMap[pp]) document.getElementById(ppMap[pp]).classList.add('active-pp');
 
-  if (withheld != null) {
+  // Per-period take-home card
+  const ppLabels = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
+  if (pp) {
+    const ppTakeHome = takeHome / pp;
+    document.getElementById('s-r-pp-takehome').textContent     = fmt(ppTakeHome);
+    document.getElementById('s-r-pp-takehome-sub').textContent = ppLabels[pp] + ' after-tax pay';
+  } else {
+    document.getElementById('s-r-pp-takehome').textContent     = '—';
+    document.getElementById('s-r-pp-takehome-sub').textContent = 'Select a pay period';
+  }
+
+  // Withholding analysis row
+  const reqPerPeriod = pp ? totalTax / pp : null;
+  document.getElementById('s-req-ded').textContent = reqPerPeriod != null ? fmt(reqPerPeriod) : '—';
+  if (withheld != null && pp) {
     const ttw   = withheld * pp;
-    const delta = ttw - totalTax;
-    document.getElementById('s-ttw').textContent     = fmt(ttw);
-    document.getElementById('s-req-ded').textContent = fmt(totalTax / pp);
+    const delta = ttw - totalTax;           // positive = over-withheld (refund), negative = under (owe)
+    document.getElementById('s-ttw').textContent   = fmt(ttw);
     const dEl = document.getElementById('s-delta');
     dEl.textContent = fmtDelta(delta);
     dEl.style.color = deltaColor(delta);
+
+    // Net position card — per-period surplus or deficit
+    const netCard  = document.getElementById('s-net-card');
+    const netVal   = document.getElementById('s-net-value');
+    const netSub   = document.getElementById('s-net-sub');
+    const perPeriodDelta = withheld - reqPerPeriod;   // + = over per period, - = under per period
+    netCard.className = 'result-card ' + (perPeriodDelta >= 0 ? 'net-over' : 'net-under');
+    if (perPeriodDelta >= 0) {
+      netVal.textContent = '+' + fmt(perPeriodDelta);
+      netSub.textContent = 'Over-withheld per ' + ppLabels[pp] + ' — expect refund';
+    } else {
+      netVal.textContent = fmt(perPeriodDelta);
+      netSub.textContent = 'Under-withheld per ' + ppLabels[pp] + ' — additional ' + fmt(Math.abs(perPeriodDelta)) + ' needed';
+    }
   } else {
-    document.getElementById('s-ttw').textContent     = '—';
-    document.getElementById('s-req-ded').textContent = fmt(totalTax / pp);
-    document.getElementById('s-delta').textContent   = '—';
-    document.getElementById('s-delta').style.color   = 'var(--text)';
+    document.getElementById('s-ttw').textContent   = '—';
+    document.getElementById('s-delta').textContent = '—';
+    document.getElementById('s-delta').style.color = 'var(--text)';
+    const netCard = document.getElementById('s-net-card');
+    netCard.className = 'result-card';
+    document.getElementById('s-net-value').textContent = '—';
+    document.getElementById('s-net-sub').textContent   = withheld == null ? 'Enter current withheld amount' : 'Select a pay period';
   }
 
   sChart = drawChart('s-chart', sChart, salary, totalTax);
@@ -873,11 +944,13 @@ function calcSingle() {
 //  CALC JOINT
 // ══════════════════════════════════════════════
 function calcJoint() {
-  const s1 = getRaw(document.getElementById('j-salary1'));
-  const s2 = getRaw(document.getElementById('j-salary2'));
+  const s1  = getRaw(document.getElementById('j-salary1'));
+  const s2  = getRaw(document.getElementById('j-salary2'));
   const ded = getRaw(document.getElementById('j-deduction'));
-  const pp1 = parseInt(document.getElementById('j-payperiod1').value);
-  const pp2 = parseInt(document.getElementById('j-payperiod2').value);
+  const pp1El = document.getElementById('j-payperiod1');
+  const pp2El = document.getElementById('j-payperiod2');
+  const pp1 = pp1El.value ? parseInt(pp1El.value) : null;
+  const pp2 = pp2El.value ? parseInt(pp2El.value) : null;
   const w1  = getRaw(document.getElementById('j-withheld1'));
   const w2  = getRaw(document.getElementById('j-withheld2'));
 
@@ -905,16 +978,76 @@ function calcJoint() {
   const tot  = (s1||0) + (s2||0);
   const tax1 = tot > 0 ? totalTax * ((s1||0) / tot) : 0;
   const tax2 = tot > 0 ? totalTax * ((s2||0) / tot) : 0;
+  const th1  = (s1||0) - tax1;
+  const th2  = (s2||0) - tax2;
 
-  document.getElementById('j-ttw1').textContent = w1 != null ? fmt(w1 * pp1) : '—';
-  document.getElementById('j-req1').textContent = fmt(tax1 / pp1);
+  const ppLabels = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
+
+  // Per-period take-home — Salary 1
+  if (pp1) {
+    document.getElementById('j-r-pp-takehome1').textContent = fmt(th1 / pp1);
+    document.getElementById('j-r-pp-th1-sub').textContent   = ppLabels[pp1] + ' after-tax pay';
+  } else {
+    document.getElementById('j-r-pp-takehome1').textContent = '—';
+    document.getElementById('j-r-pp-th1-sub').textContent   = 'Select a pay period';
+  }
+
+  // Per-period take-home — Salary 2
+  if (pp2) {
+    document.getElementById('j-r-pp-takehome2').textContent = fmt(th2 / pp2);
+    document.getElementById('j-r-pp-th2-sub').textContent   = ppLabels[pp2] + ' after-tax pay';
+  } else {
+    document.getElementById('j-r-pp-takehome2').textContent = '—';
+    document.getElementById('j-r-pp-th2-sub').textContent   = 'Select a pay period';
+  }
+
+  // Withholding analysis per spouse
+  const req1 = pp1 ? tax1 / pp1 : null;
+  const req2 = pp2 ? tax2 / pp2 : null;
+
+  document.getElementById('j-ttw1').textContent = w1 != null && pp1 ? fmt(w1 * pp1) : '—';
+  document.getElementById('j-req1').textContent = req1 != null ? fmt(req1) : '—';
   const d1 = document.getElementById('j-delta1');
-  if (w1 != null) { d1.textContent = fmtDelta(w1*pp1 - tax1); d1.style.color = deltaColor(w1*pp1 - tax1); } else d1.textContent = '—';
+  if (w1 != null && pp1) { d1.textContent = fmtDelta(w1*pp1 - tax1); d1.style.color = deltaColor(w1*pp1 - tax1); } else d1.textContent = '—';
 
-  document.getElementById('j-ttw2').textContent = w2 != null ? fmt(w2 * pp2) : '—';
-  document.getElementById('j-req2').textContent = fmt(tax2 / pp2);
+  document.getElementById('j-ttw2').textContent = w2 != null && pp2 ? fmt(w2 * pp2) : '—';
+  document.getElementById('j-req2').textContent = req2 != null ? fmt(req2) : '—';
   const d2 = document.getElementById('j-delta2');
-  if (w2 != null) { d2.textContent = fmtDelta(w2*pp2 - tax2); d2.style.color = deltaColor(w2*pp2 - tax2); } else d2.textContent = '—';
+  if (w2 != null && pp2) { d2.textContent = fmtDelta(w2*pp2 - tax2); d2.style.color = deltaColor(w2*pp2 - tax2); } else d2.textContent = '—';
+
+  // Net position card — Salary 1
+  const nc1 = document.getElementById('j-net-card1');
+  const nv1 = document.getElementById('j-net-value1');
+  const ns1 = document.getElementById('j-net-sub1');
+  if (w1 != null && pp1 && req1 != null) {
+    const ppDelta1 = w1 - req1;
+    nc1.className = 'result-card ' + (ppDelta1 >= 0 ? 'net-over' : 'net-under');
+    nv1.textContent = (ppDelta1 >= 0 ? '+' : '') + fmt(ppDelta1);
+    ns1.textContent = ppDelta1 >= 0
+      ? 'Over-withheld per ' + ppLabels[pp1] + ' — expect refund'
+      : 'Under-withheld per ' + ppLabels[pp1] + ' — additional ' + fmt(Math.abs(ppDelta1)) + ' needed';
+  } else {
+    nc1.className = 'result-card';
+    nv1.textContent = '—';
+    ns1.textContent = w1 == null ? 'Enter current withheld amount' : 'Select a pay period';
+  }
+
+  // Net position card — Salary 2
+  const nc2 = document.getElementById('j-net-card2');
+  const nv2 = document.getElementById('j-net-value2');
+  const ns2 = document.getElementById('j-net-sub2');
+  if (w2 != null && pp2 && req2 != null) {
+    const ppDelta2 = w2 - req2;
+    nc2.className = 'result-card ' + (ppDelta2 >= 0 ? 'net-over' : 'net-under');
+    nv2.textContent = (ppDelta2 >= 0 ? '+' : '') + fmt(ppDelta2);
+    ns2.textContent = ppDelta2 >= 0
+      ? 'Over-withheld per ' + ppLabels[pp2] + ' — expect refund'
+      : 'Under-withheld per ' + ppLabels[pp2] + ' — additional ' + fmt(Math.abs(ppDelta2)) + ' needed';
+  } else {
+    nc2.className = 'result-card';
+    nv2.textContent = '—';
+    ns2.textContent = w2 == null ? 'Enter current withheld amount' : 'Select a pay period';
+  }
 
   jChart = drawChart('j-chart', jChart, combined, totalTax);
 }
