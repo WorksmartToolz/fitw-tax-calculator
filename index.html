@@ -915,22 +915,34 @@ function calcSingle() {
   if (!canCalc) return;
 
   const totalTax     = computeTax(taxable, sBrackets);
-  const takeHome     = salary - totalTax;
   const effRate      = salary > 0 ? totalTax / salary : 0;
   const margRate     = marginalRate(taxable, sBrackets);
   const reqPerPeriod = pp ? totalTax / pp : null;
   const ppLabels     = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
 
+  // Effective withheld = current + simulator adjustment (calculated early, used in take-home)
+  const simmedTotal = (withheld != null && adjWH != null) ? withheld + adjWH
+                    : (adjWH != null)                     ? adjWH
+                    : withheld;
+
+  // Take-home = salary minus what is ACTUALLY being withheld per year
+  // If simmedTotal is set (and we have a pp), use that as the real cash deducted
+  // Otherwise fall back to tax obligation (theoretical take-home)
+  const annualActualDeducted = (simmedTotal != null && pp) ? simmedTotal * pp : totalTax;
+  const takeHome             = salary - annualActualDeducted;
+
   // Summary cards
   document.getElementById('s-r-total-tax').textContent = fmt(totalTax);
   document.getElementById('s-r-taxable').textContent   = fmt(taxable);
   document.getElementById('s-r-takehome').textContent  = fmt(takeHome);
+  document.getElementById('s-r-takehome').parentElement.querySelector('.result-sub').textContent =
+    simmedTotal != null && pp ? 'After actual withholdings' : 'After federal tax only';
   document.getElementById('s-r-eff-rate').textContent  = fmtPct(effRate);
   document.getElementById('s-r-marginal').textContent  = 'Marginal: ' + Math.round(margRate * 100) + '%';
   document.getElementById('s-eff-label').textContent   = fmtPct(effRate);
   document.getElementById('s-rate-bar').style.width    = Math.min(100, effRate / 0.37 * 100) + '%';
 
-  // Pay period tax grid
+  // Pay period tax grid (always shows required tax per period, not withheld)
   const ppMap = { 52:'s-pp-weekly', 26:'s-pp-biweekly', 24:'s-pp-semi', 12:'s-pp-monthly' };
   Object.values(ppMap).forEach(id => document.getElementById(id).classList.remove('active-pp'));
   document.getElementById('s-pp-weekly-val').textContent   = fmt(totalTax / 52);
@@ -939,19 +951,16 @@ function calcSingle() {
   document.getElementById('s-pp-monthly-val').textContent  = fmt(totalTax / 12);
   if (pp && ppMap[pp]) document.getElementById(ppMap[pp]).classList.add('active-pp');
 
-  // Per-period take-home card
+  // Per-period take-home card — salary per period minus what's actually withheld per period
   if (pp) {
-    document.getElementById('s-r-pp-takehome').textContent     = fmt(takeHome / pp);
-    document.getElementById('s-r-pp-takehome-sub').textContent = ppLabels[pp] + ' after-tax pay';
+    const ppActualWH  = simmedTotal != null ? simmedTotal : (totalTax / pp);
+    const ppTakeHome  = (salary / pp) - ppActualWH;
+    document.getElementById('s-r-pp-takehome').textContent     = fmt(ppTakeHome);
+    document.getElementById('s-r-pp-takehome-sub').textContent = ppLabels[pp] + (simmedTotal != null ? ' actual take-home' : ' after-tax pay');
   } else {
     document.getElementById('s-r-pp-takehome').textContent     = '—';
     document.getElementById('s-r-pp-takehome-sub').textContent = 'Select a pay period';
   }
-
-  // Withholding analysis — effective = current + adjustment (simulator adds to base)
-  const simmedTotal = (withheld != null && adjWH != null) ? withheld + adjWH
-                    : (adjWH != null)                     ? adjWH
-                    : withheld;
 
   document.getElementById('s-req-ded').textContent = reqPerPeriod != null ? fmt(reqPerPeriod) : '—';
 
@@ -1037,13 +1046,11 @@ function calcJoint() {
   if (!canCalc) return;
 
   const totalTax = computeTax(taxable, jBrackets);
-  const takeHome = combined - totalTax;
   const effRate  = combined > 0 ? totalTax / combined : 0;
   const margRate = marginalRate(taxable, jBrackets);
 
   document.getElementById('j-r-total-tax').textContent = fmt(totalTax);
   document.getElementById('j-r-taxable').textContent   = fmt(taxable);
-  document.getElementById('j-r-takehome').textContent  = fmt(takeHome);
   document.getElementById('j-r-eff-rate').textContent  = fmtPct(effRate);
   document.getElementById('j-r-marginal').textContent  = 'Marginal: ' + Math.round(margRate * 100) + '%';
   document.getElementById('j-eff-label').textContent   = fmtPct(effRate);
@@ -1052,17 +1059,43 @@ function calcJoint() {
   const tot  = (s1||0) + (s2||0);
   const tax1 = tot > 0 ? totalTax * ((s1||0) / tot) : 0;
   const tax2 = tot > 0 ? totalTax * ((s2||0) / tot) : 0;
-  const th1  = (s1||0) - tax1;
-  const th2  = (s2||0) - tax2;
   const ppLabels = { 52:'Weekly', 26:'Bi-Weekly', 24:'Semi-Monthly', 12:'Monthly' };
   const req1 = pp1 ? tax1 / pp1 : null;
   const req2 = pp2 ? tax2 / pp2 : null;
 
-  // Per-period take-home cards
-  if (pp1) { document.getElementById('j-r-pp-takehome1').textContent = fmt(th1 / pp1); document.getElementById('j-r-pp-th1-sub').textContent = ppLabels[pp1] + ' after-tax pay'; }
-  else      { document.getElementById('j-r-pp-takehome1').textContent = '—'; document.getElementById('j-r-pp-th1-sub').textContent = 'Select a pay period'; }
-  if (pp2) { document.getElementById('j-r-pp-takehome2').textContent = fmt(th2 / pp2); document.getElementById('j-r-pp-th2-sub').textContent = ppLabels[pp2] + ' after-tax pay'; }
-  else      { document.getElementById('j-r-pp-takehome2').textContent = '—'; document.getElementById('j-r-pp-th2-sub').textContent = 'Select a pay period'; }
+  // Simmed totals per salary (base withheld + adjustment)
+  const sim1 = (w1 != null && adj1 != null) ? w1 + adj1 : (adj1 != null) ? adj1 : w1;
+  const sim2 = (w2 != null && adj2 != null) ? w2 + adj2 : (adj2 != null) ? adj2 : w2;
+
+  // Annual actual deducted per salary
+  const annual1Deducted = (sim1 != null && pp1) ? sim1 * pp1 : tax1;
+  const annual2Deducted = (sim2 != null && pp2) ? sim2 * pp2 : tax2;
+
+  // Per-period take-home = salary / pp minus actual withheld per period
+  if (pp1) {
+    const ppActual1  = sim1 != null ? sim1 : req1;
+    const ppTH1      = ((s1||0) / pp1) - ppActual1;
+    document.getElementById('j-r-pp-takehome1').textContent = fmt(ppTH1);
+    document.getElementById('j-r-pp-th1-sub').textContent   = ppLabels[pp1] + (sim1 != null ? ' actual take-home' : ' after-tax pay');
+  } else {
+    document.getElementById('j-r-pp-takehome1').textContent = '—';
+    document.getElementById('j-r-pp-th1-sub').textContent   = 'Select a pay period';
+  }
+  if (pp2) {
+    const ppActual2  = sim2 != null ? sim2 : req2;
+    const ppTH2      = ((s2||0) / pp2) - ppActual2;
+    document.getElementById('j-r-pp-takehome2').textContent = fmt(ppTH2);
+    document.getElementById('j-r-pp-th2-sub').textContent   = ppLabels[pp2] + (sim2 != null ? ' actual take-home' : ' after-tax pay');
+  } else {
+    document.getElementById('j-r-pp-takehome2').textContent = '—';
+    document.getElementById('j-r-pp-th2-sub').textContent   = 'Select a pay period';
+  }
+
+  // Combined take-home = combined salary minus total actually deducted
+  const combinedTakeHome = combined - annual1Deducted - annual2Deducted;
+  document.getElementById('j-r-takehome').textContent  = fmt(combinedTakeHome);
+  document.getElementById('j-r-takehome').parentElement.querySelector('.result-sub').textContent =
+    (sim1 != null || sim2 != null) ? 'After actual withholdings' : 'After federal tax';
 
   // Withholding analysis
   document.getElementById('j-ttw1').textContent = w1 != null && pp1 ? fmt(w1 * pp1) : '—';
