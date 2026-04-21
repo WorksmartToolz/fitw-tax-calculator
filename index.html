@@ -239,7 +239,33 @@
   .prefill-btn.prefill-clear:hover { background: var(--red); color: white; border-color: var(--red); }
   .prefill-btn.active { background: var(--blue); color: white; border-color: var(--blue-dark); }
 
-  /* DISCLAIMER CARD */
+  /* COLLAPSIBLE NOTICES */
+  .notice-details { border-radius: 8px; overflow: hidden; }
+  .notice-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    list-style: none;
+    border-radius: 8px;
+    user-select: none;
+    transition: opacity 0.15s;
+  }
+  .notice-summary::-webkit-details-marker { display: none; }
+  .notice-summary::after { content: '▸'; margin-left: auto; font-size: 10px; transition: transform 0.2s; }
+  details[open] .notice-summary::after { transform: rotate(90deg); }
+  details[open] .notice-summary { border-radius: 8px 8px 0 0; }
+  .notice-summary:hover { opacity: 0.85; }
+  .notice-warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+  .notice-info    { background: #f0fdf4; border: 1px solid #86efac; color: #14532d; }
+  .notice-body { padding: 10px 14px 12px; font-size: 12px; line-height: 1.6; border-radius: 0 0 8px 8px; }
+  .notice-body-warning { background: #fffbeb; border: 1px solid #fcd34d; border-top: none; color: #78350f; }
+  .notice-body-info    { background: #f0fdf4; border: 1px solid #86efac; border-top: none; color: #166534; }
+
+  /* DISCLAIMER CARD (kept for fallback, now unused) */
   .disclaimer-card {
     background: #fffbeb;
     border: 1px solid #fcd34d;
@@ -476,7 +502,7 @@
             <summary class="notice-summary notice-warning">
               <span>⚠️</span> <strong>Federal Tax Only</strong> — other payroll deductions not included
             </summary>
-            <div class="notice-body">
+            <div class="notice-body notice-body-warning">
               Take-home values do <strong>not</strong> include Social Security (6.2%), Medicare (1.45%), state income tax, state disability insurance, or benefit deductions. Your actual net pay will be lower.
             </div>
           </details>
@@ -484,13 +510,14 @@
             <summary class="notice-summary notice-info">
               <span>ℹ️</span> <strong>IRS Estimator variance of ~$0–$100 is normal</strong>
             </summary>
-            <div class="notice-body">
+            <div class="notice-body notice-body-info">
               This calculator uses the <strong>Form 1040 tax bracket method</strong> (Rev. Proc. tables). The IRS Withholding Estimator uses a different method (Pub. 15-T Percentage Method) built for payroll systems. A gap larger than $100 almost always means the wrong year is selected — confirm your year button and standard deduction match your return.
             </div>
           </details>
         </div>
 
         <div class="results-grid">
+
           <div class="result-card highlight">
             <div class="result-label">Total Tax Obligation</div>
             <div class="result-value" id="s-r-total-tax">—</div>
@@ -730,7 +757,7 @@
             <summary class="notice-summary notice-warning">
               <span>⚠️</span> <strong>Federal Tax Only</strong> — other payroll deductions not included
             </summary>
-            <div class="notice-body">
+            <div class="notice-body notice-body-warning">
               Take-home values do <strong>not</strong> include Social Security (6.2%), Medicare (1.45%), state income tax, state disability insurance, or benefit deductions. Your actual net pay will be lower.
             </div>
           </details>
@@ -738,7 +765,7 @@
             <summary class="notice-summary notice-info">
               <span>ℹ️</span> <strong>IRS Estimator variance of ~$0–$100 is normal</strong>
             </summary>
-            <div class="notice-body">
+            <div class="notice-body notice-body-info">
               This calculator uses the <strong>Form 1040 tax bracket method</strong> (Rev. Proc. tables). The IRS Withholding Estimator uses a different method (Pub. 15-T Percentage Method) built for payroll systems. A gap larger than $100 almost always means the wrong year is selected.
             </div>
           </details>
