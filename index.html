@@ -451,24 +451,13 @@
 
       <div class="card">
         <div class="card-title">Tax Bracket Table</div>
-
-        <!-- IRS Pre-fill buttons -->
-        <div style="background:var(--blue-light);border:1.5px solid var(--blue-mid);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-          <div style="font-size:12px;font-weight:600;color:var(--blue-dark);margin-bottom:4px;">⚡ Quick-fill IRS Official Brackets</div>
-          <div style="font-size:11px;color:var(--blue-dark);opacity:0.8;margin-bottom:10px;">Select the tax year matching your return — auto-fills all 7 brackets and standard deduction.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-            <button class="prefill-btn" id="s-btn-2024" onclick="prefill('s','2024-single')">2024 Single</button>
-            <button class="prefill-btn" id="s-btn-2025" onclick="prefill('s','2025-single')">2025 Single</button>
-            <button class="prefill-btn" id="s-btn-2026" onclick="prefill('s','2026-single')">2026 Single</button>
-            <button class="prefill-btn prefill-clear" onclick="prefill('s','clear')">Clear</button>
-          </div>
-          <div id="s-bracket-ref" style="display:none;font-size:11px;color:var(--blue-dark);font-weight:600;"></div>
-          <div id="s-bracket-none" style="font-size:11px;color:var(--text-secondary);font-style:italic;">No year selected — click a year above or enter brackets manually below.</div>
-        </div>
-
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-          Or type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket manually.
-          Upper Limit, Taxable Amount, and Tax Owed all calculate automatically.
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
+          Enter the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket. Upper Limit, Taxable Amount, and Tax Owed calculate automatically.
+        </p>
+        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">
+          Find current IRS bracket thresholds at
+          <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:500;">irs.gov/filing/federal-income-tax-rates-and-brackets</a>.
+          The <strong>10% lower limit is always $0</strong> and is pre-filled. The <strong>37% bracket is optional</strong> — leave it blank if your income won't reach it.
         </p>
 
         <div class="bracket-scroll">
@@ -716,26 +705,13 @@
 
       <div class="card">
         <div class="card-title">Tax Bracket Table (MFJ)</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-          Type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket — all other columns auto-calculate.
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
+          Enter the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket — all other columns auto-calculate.
         </p>
-
-        <!-- IRS Pre-fill buttons -->
-        <div style="background:var(--blue-light);border:1.5px solid var(--blue-mid);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-          <div style="font-size:12px;font-weight:600;color:var(--blue-dark);margin-bottom:4px;">⚡ Quick-fill IRS Official Brackets</div>
-          <div style="font-size:11px;color:var(--blue-dark);opacity:0.8;margin-bottom:10px;">Select the tax year matching your return — auto-fills all 7 brackets and standard deduction.</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-            <button class="prefill-btn" id="j-btn-2024" onclick="prefill('j','2024-joint')">2024 MFJ</button>
-            <button class="prefill-btn" id="j-btn-2025" onclick="prefill('j','2025-joint')">2025 MFJ</button>
-            <button class="prefill-btn" id="j-btn-2026" onclick="prefill('j','2026-joint')">2026 MFJ</button>
-            <button class="prefill-btn prefill-clear" onclick="prefill('j','clear')">Clear</button>
-          </div>
-          <div id="j-bracket-ref" style="display:none;font-size:11px;color:var(--blue-dark);font-weight:600;"></div>
-          <div id="j-bracket-none" style="font-size:11px;color:var(--text-secondary);font-style:italic;">No year selected — click a year above or enter brackets manually below.</div>
-        </div>
-
-        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
-          Or type the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket manually — all other columns auto-calculate.
+        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">
+          Find current IRS bracket thresholds at
+          <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:500;">irs.gov/filing/federal-income-tax-rates-and-brackets</a>.
+          The <strong>10% lower limit is always $0</strong> and is pre-filled. The <strong>37% bracket is optional</strong> — leave it blank if your combined income won't reach it.
         </p>
 
         <div class="bracket-scroll">
@@ -945,13 +921,20 @@ document.querySelectorAll('.currency-input').forEach(el => {
 
 // ══════════════════════════════════════════════
 //  BRACKET STATE
+//  Index 0 (10%) = always 0, hardcoded
+//  Index 6 (37%) = optional, null means not used
 // ══════════════════════════════════════════════
 const RATES  = [0.10, 0.12, 0.22, 0.24, 0.32, 0.35, 0.37];
 const LABELS = ['10%','12%','22%','24%','32%','35%','37%'];
 
-let sBrackets = [null,null,null,null,null,null,null];
-let jBrackets = [null,null,null,null,null,null,null];
+let sBrackets = [0, null, null, null, null, null, null];
+let jBrackets = [0, null, null, null, null, null, null];
 let sChart = null, jChart = null;
+
+// Calculator requires brackets 0-5 (10%–35%) to be filled; 37% is optional
+function canCalculate(brackets) {
+  return brackets.slice(0, 6).every(b => b !== null);
+}
 
 // ══════════════════════════════════════════════
 //  TAB SWITCH
@@ -1008,25 +991,43 @@ function buildBracketTable(bodyId, brackets, prefix, taxableIncome) {
     tbody.innerHTML = '';
     for (let i = 0; i < 7; i++) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="rate-cell">${LABELS[i]}</td>
-        <td><input class="bracket-input" type="text" inputmode="numeric" placeholder="0"
-             data-idx="${i}" data-prefix="${prefix}"></td>
-        <td class="u-cell" style="color:var(--text-secondary);">—</td>
-        <td class="t-cell">—</td>
-        <td class="o-cell" style="font-weight:500;">—</td>`;
-      tbody.appendChild(tr);
+      const isHardcoded = i === 0;   // 10% always = $0
+      const isOptional  = i === 6;   // 37% is optional
 
-      const inp = tr.querySelector('.bracket-input');
-      inp.addEventListener('input', function () {
-        // Strip everything except digits, format with commas for display
-        const raw = this.value.replace(/[^0-9]/g, '');
-        const num = raw === '' ? null : parseInt(raw, 10);
-        this.value  = raw === '' ? '' : num.toLocaleString();
-        const idx   = parseInt(this.dataset.idx, 10);
-        if (this.dataset.prefix === 's') { sBrackets[idx] = num; calcSingle(); }
-        else                              { jBrackets[idx] = num; calcJoint();  }
-      });
+      if (isHardcoded) {
+        // 10% row — display only, not editable
+        tr.innerHTML = `
+          <td class="rate-cell">${LABELS[i]}</td>
+          <td><span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;
+               color:var(--text-secondary);padding:4px 8px;background:var(--bg);
+               border:1.5px solid var(--border);border-radius:6px;display:inline-block;">
+               $0 <span style="font-size:9px;font-weight:400;">(fixed)</span></span></td>
+          <td class="u-cell" style="color:var(--text-secondary);">—</td>
+          <td class="t-cell">—</td>
+          <td class="o-cell" style="font-weight:500;">—</td>`;
+      } else {
+        tr.innerHTML = `
+          <td class="rate-cell">${LABELS[i]}${isOptional ? '<span style="font-size:9px;font-weight:400;color:var(--text-secondary);margin-left:3px;">(opt)</span>' : ''}</td>
+          <td><input class="bracket-input" type="text" inputmode="numeric"
+               placeholder="${isOptional ? 'optional' : 'required'}"
+               data-idx="${i}" data-prefix="${prefix}"
+               style="${isOptional ? 'border-style:dashed;opacity:0.8;' : ''}"></td>
+          <td class="u-cell" style="color:var(--text-secondary);">—</td>
+          <td class="t-cell">—</td>
+          <td class="o-cell" style="font-weight:500;">—</td>`;
+
+        const inp = tr.querySelector('.bracket-input');
+        inp.addEventListener('input', function () {
+          const raw = this.value.replace(/[^0-9]/g, '');
+          const num = raw === '' ? null : parseInt(raw, 10);
+          this.value = raw === '' ? '' : num.toLocaleString();
+          const idx = parseInt(this.dataset.idx, 10);
+          if (this.dataset.prefix === 's') { sBrackets[idx] = num; calcSingle(); }
+          else                              { jBrackets[idx] = num; calcJoint();  }
+        });
+      }
+
+      tbody.appendChild(tr);
     }
     rows = tbody.querySelectorAll('tr');
   }
@@ -1040,13 +1041,13 @@ function buildBracketTable(bodyId, brackets, prefix, taxableIncome) {
       ? (i < 6 ? (high !== null ? '$' + (high - 1).toLocaleString() : '—') : 'Unlimited')
       : '—';
 
-    tr.querySelector('.u-cell').textContent =  upperTxt;
+    tr.querySelector('.u-cell').textContent = upperTxt;
     tr.querySelector('.t-cell').textContent = (taxableIncome !== null && brackets[i] !== null) ? fmt(taxAmts[i]) : '—';
     tr.querySelector('.o-cell').textContent = (taxableIncome !== null && brackets[i] !== null) ? fmt(taxOweds[i]) : '—';
 
-    // Sync input only if it has no focus (avoid clobbering user typing)
+    // Sync editable inputs only (not the hardcoded 10% row)
     const inp = tr.querySelector('.bracket-input');
-    if (document.activeElement !== inp) {
+    if (inp && document.activeElement !== inp) {
       inp.value = brackets[i] !== null ? brackets[i].toLocaleString() : '';
     }
   });
@@ -1121,7 +1122,7 @@ function calcSingle() {
   const adjWH     = getRaw(document.getElementById('s-adj-withheld'));  // simulator field
 
   const taxable  = (salary != null && deduction != null) ? Math.max(0, salary - deduction) : null;
-  const canCalc  = taxable != null && sBrackets.every(b => b != null);
+  const canCalc  = taxable != null && canCalculate(sBrackets);
 
   buildBracketTable('s-bracket-body', sBrackets, 's', taxable);
   if (!canCalc) return;
@@ -1260,7 +1261,7 @@ function calcJoint() {
 
   const combined = (s1 != null || s2 != null) ? (s1||0) + (s2||0) : null;
   const taxable  = (combined != null && ded != null) ? Math.max(0, combined - ded) : null;
-  const canCalc  = taxable != null && jBrackets.every(b => b != null);
+  const canCalc  = taxable != null && canCalculate(jBrackets);
 
   buildBracketTable('j-bracket-body', jBrackets, 'j', taxable);
   if (!canCalc) return;
