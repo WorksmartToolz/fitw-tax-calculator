@@ -389,7 +389,7 @@
           <label>Annual Gross Salary</label>
           <div class="input-wrap">
             <span class="prefix">$</span>
-            <input class="currency-input" id="s-salary" placeholder="e.g. 85,000" inputmode="numeric">
+            <input class="currency-input" id="s-salary" placeholder="e.g. 85,000.00" inputmode="decimal">
           </div>
         </div>
 
@@ -594,13 +594,24 @@
             </p>
           </div>
         </div>
+
+        <div class="disclaimer-card" style="background:#f0fdf4;border-color:#86efac;border-left-color:#16a34a;">
+          <div class="disclaimer-icon">ℹ️</div>
+          <div>
+            <div class="disclaimer-title" style="color:#14532d;">Why Results May Differ from the IRS Withholding Estimator</div>
+            <p class="disclaimer-body" style="color:#166534;">
+              This calculator applies <strong>IRS Rev. Proc. tax bracket tables</strong> directly to taxable income — the same method used on Form 1040 to compute your actual tax liability. The <strong>IRS Tax Withholding Estimator</strong> (irs.gov/W4App) uses a separate method called the <strong>Publication 15-T Percentage Method</strong>, which is designed for payroll withholding and uses different internal thresholds and an annualized wage adjustment. The two tools are intentionally different.
+            </p>
+            <p class="disclaimer-footer" style="border-top-color:#86efac;color:#14532d;">
+              A small variance of <strong>$0–$100</strong> vs. the IRS Estimator is normal and expected. A larger gap — like $300–$500 — almost always means the wrong tax year is selected. Make sure the year button you clicked matches the return you are planning for, and that the standard deduction shown matches that year's IRS value.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 </div>
-
-<!-- ══════════════ JOINT TAB ══════════════ -->
 <div id="panel-joint" class="tab-panel">
   <div class="main">
 
@@ -612,14 +623,14 @@
             <label>Salary 1</label>
             <div class="input-wrap">
               <span class="prefix">$</span>
-              <input class="currency-input" id="j-salary1" placeholder="e.g. 80,000" inputmode="numeric">
+              <input class="currency-input" id="j-salary1" placeholder="e.g. 80,000.00" inputmode="decimal">
             </div>
           </div>
           <div class="field">
             <label>Salary 2</label>
             <div class="input-wrap">
               <span class="prefix">$</span>
-              <input class="currency-input" id="j-salary2" placeholder="e.g. 60,000" inputmode="numeric">
+              <input class="currency-input" id="j-salary2" placeholder="e.g. 60,000.00" inputmode="decimal">
             </div>
           </div>
         </div>
@@ -847,13 +858,24 @@
             </p>
           </div>
         </div>
+
+        <div class="disclaimer-card" style="background:#f0fdf4;border-color:#86efac;border-left-color:#16a34a;">
+          <div class="disclaimer-icon">ℹ️</div>
+          <div>
+            <div class="disclaimer-title" style="color:#14532d;">Why Results May Differ from the IRS Withholding Estimator</div>
+            <p class="disclaimer-body" style="color:#166534;">
+              This calculator applies <strong>IRS Rev. Proc. tax bracket tables</strong> directly to taxable income — the same method used on Form 1040 to compute your actual tax liability. The <strong>IRS Tax Withholding Estimator</strong> (irs.gov/W4App) uses a separate method called the <strong>Publication 15-T Percentage Method</strong>, which is designed for payroll withholding and uses different internal thresholds and an annualized wage adjustment. The two tools are intentionally different.
+            </p>
+            <p class="disclaimer-footer" style="border-top-color:#86efac;color:#14532d;">
+              A small variance of <strong>$0–$100</strong> vs. the IRS Estimator is normal and expected. A larger gap — like $300–$500 — almost always means the wrong tax year is selected. Make sure the year button you clicked matches the return you are planning for, and that the standard deduction shown matches that year's IRS value.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ══════════════════════════════════════════════
 //  CURRENCY INPUT — comma-formatted text fields
@@ -863,9 +885,19 @@ function getRaw(el) {
 }
 
 function applyCommas(el) {
-  const raw = el.value.replace(/[^0-9]/g, '');
+  const raw = el.value.replace(/[^0-9.]/g, '');   // allow digits AND decimal point
   if (!raw) { el.value = ''; return; }
-  el.value = parseInt(raw, 10).toLocaleString();
+
+  // Split on decimal — only keep one decimal point
+  const parts = raw.split('.');
+  const intPart = parts[0];
+  const decPart = parts.length > 1 ? parts.slice(1).join('').substring(0, 2) : null; // max 2 decimal places
+
+  // Format the integer part with commas
+  const formatted = intPart ? parseInt(intPart, 10).toLocaleString() : '0';
+
+  // Re-attach decimal portion exactly as typed (don't reformat it — lets user type "179,539.7" then ".70")
+  el.value = decPart !== null ? formatted + '.' + decPart : formatted;
 }
 
 // Bind all currency inputs
@@ -875,7 +907,6 @@ document.querySelectorAll('.currency-input').forEach(el => {
     const before = this.value.length;
     applyCommas(this);
     const after = this.value.length;
-    // Adjust caret for added/removed commas
     try { this.setSelectionRange(pos + (after - before), pos + (after - before)); } catch(e) {}
     calcSingle();
     calcJoint();
@@ -1315,15 +1346,17 @@ const IRS_BRACKETS = {
     stdDed: 14600,
     label: '2024 Single/MFS — Std. Deduction: $14,600'
   },
-  // 2025 Single/MFS — Rev. Proc. 2024-40
+  // 2025 Single/MFS — Rev. Proc. 2024-40, std deduction raised to $15,750 by OBBBA
   '2025-single': {
     lowers: [0, 11925, 48475, 103350, 197300, 250525, 626350],
-    stdDed: 15000,
-    label: '2025 Single/MFS — Std. Deduction: $15,000'
+    stdDed: 15750,
+    label: '2025 Single/MFS — Std. Deduction: $15,750'
   },
-  // 2026 Single/MFS — Rev. Proc. 2025-32 (IRS official)
+  // 2026 Single/MFS — Rev. Proc. 2025-32 (IRS official, October 2025)
+  // 10%:$0-$12,400 | 12%:over $12,400 | 22%:over $50,400 | 24%:over $105,700
+  // 32%:over $201,775 | 35%:over $256,225 | 37%:over $640,600
   '2026-single': {
-    lowers: [0, 12400, 50400, 105700, 201250, 256225, 640600],
+    lowers: [0, 12400, 50400, 105700, 201775, 256225, 640600],
     stdDed: 16100,
     label: '2026 Single/MFS — Std. Deduction: $16,100'
   },
@@ -1333,13 +1366,15 @@ const IRS_BRACKETS = {
     stdDed: 29200,
     label: '2024 Married Filing Jointly — Std. Deduction: $29,200'
   },
-  // 2025 Married Filing Jointly — Rev. Proc. 2024-40 + OBBBA
+  // 2025 Married Filing Jointly — Rev. Proc. 2024-40, std deduction raised to $31,500 by OBBBA
   '2025-joint': {
     lowers: [0, 23850, 96950, 206700, 394600, 501050, 751600],
     stdDed: 31500,
     label: '2025 Married Filing Jointly — Std. Deduction: $31,500'
   },
-  // 2026 Married Filing Jointly — Rev. Proc. 2025-32 (IRS official)
+  // 2026 Married Filing Jointly — Rev. Proc. 2025-32 (IRS official, October 2025)
+  // 10%:$0-$24,800 | 12%:over $24,800 | 22%:over $100,800 | 24%:over $211,400
+  // 32%:over $403,550 | 35%:over $512,450 | 37%:over $768,700
   '2026-joint': {
     lowers: [0, 24800, 100800, 211400, 403550, 512450, 768700],
     stdDed: 32200,
