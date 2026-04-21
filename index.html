@@ -959,23 +959,23 @@ const deltaColor = n => n > 100 ? 'var(--green)' : n < -100 ? 'var(--red)' : 'va
 function buildBracketTable(bodyId, brackets, prefix, taxableIncome) {
   const tbody = document.getElementById(bodyId);
 
-  // Compute per-bracket taxable amounts
-  let rem = taxableIncome !== null ? Math.max(0, taxableIncome) : 0;
+  // Compute per-bracket taxable amounts using Excel formula:
+  // inBracket = max(0, min(taxableIncome - lower, upper - lower))
   const taxAmts = [], taxOweds = [];
   let activeBracket = -1;
 
   for (let i = 0; i < 7; i++) {
-    const low  = brackets[i];
-    const high = i < 6 ? brackets[i + 1] : null;
-    const range = (low !== null && high !== null) ? high - low : (low !== null ? Infinity : 0);
-    let taxable = 0;
-    if (taxableIncome !== null && low !== null && rem > 0) {
-      taxable = range === Infinity ? rem : Math.min(rem, range);
-      if (taxable > 0) activeBracket = i;
+    const lower = brackets[i];
+    const upper = i < 6 ? brackets[i + 1] : null;
+    let inBracket = 0;
+    if (taxableIncome !== null && lower !== null && taxableIncome > lower) {
+      inBracket = upper != null
+        ? Math.max(0, Math.min(taxableIncome - lower, upper - lower))
+        : Math.max(0, taxableIncome - lower);
+      if (inBracket > 0) activeBracket = i;
     }
-    rem = Math.max(0, rem - taxable);
-    taxAmts.push(taxable);
-    taxOweds.push(taxable * RATES[i]);
+    taxAmts.push(inBracket);
+    taxOweds.push(inBracket * RATES[i]);
   }
 
   // Build rows only once; after that just update cells to preserve focus
@@ -1031,17 +1031,23 @@ function buildBracketTable(bodyId, brackets, prefix, taxableIncome) {
 // ══════════════════════════════════════════════
 //  COMPUTE TAX
 // ══════════════════════════════════════════════
+//  COMPUTE TAX — matches Excel formula exactly
+//  Each bracket: taxable = max(0, min(income - lower, upper - lower))
+//  where upper = next bracket's lower limit (brackets store the "over X" threshold)
+// ══════════════════════════════════════════════
 function computeTax(taxable, brackets) {
   if (!taxable || taxable <= 0) return 0;
-  let tax = 0, rem = taxable;
+  let tax = 0;
   for (let i = 0; i < 7; i++) {
     if (brackets[i] == null) continue;
-    const next = i < 6 ? brackets[i + 1] : null;
-    const range = next != null ? (next - brackets[i]) : Infinity;
-    const chunk = Math.min(rem, range);
-    tax += chunk * RATES[i];
-    rem -= chunk;
-    if (rem <= 0) break;
+    const lower = brackets[i];
+    const upper = i < 6 ? brackets[i + 1] : null;
+    // Income in this bracket = how much of taxable income exceeds this bracket's floor,
+    // capped at the bracket's width
+    const inBracket = upper != null
+      ? Math.max(0, Math.min(taxable - lower, upper - lower))
+      : Math.max(0, taxable - lower);
+    tax += inBracket * RATES[i];
   }
   return tax;
 }
