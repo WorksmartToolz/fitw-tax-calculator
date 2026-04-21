@@ -617,6 +617,18 @@
         <div class="card">
           <div class="card-title">Income Breakdown</div>
           <canvas id="s-chart" style="max-height:200px;"></canvas>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px;">
+            <div style="background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:10px 12px;">
+              <div style="font-size:10px;color:var(--blue-dark);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Federal Tax</div>
+              <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:var(--blue);" id="s-chart-tax">—</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="s-chart-tax-pct">—% of salary</div>
+            </div>
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;">
+              <div style="font-size:10px;color:#14532d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Take-Home</div>
+              <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:var(--green);" id="s-chart-takehome">—</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="s-chart-takehome-pct">—% of salary</div>
+            </div>
+          </div>
           <div class="legend">
             <div class="legend-item"><div class="legend-dot" style="background:#1a56db;"></div><span style="color:var(--text-secondary);">Federal Tax</span></div>
             <div class="legend-item"><div class="legend-dot" style="background:#c7d7f9;border:1px solid #93c5fd;"></div><span style="color:var(--text-secondary);">Take-Home</span></div>
@@ -870,6 +882,18 @@
         <div class="card">
           <div class="card-title">Combined Income Breakdown</div>
           <canvas id="j-chart" style="max-height:200px;"></canvas>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px;">
+            <div style="background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:8px;padding:10px 12px;">
+              <div style="font-size:10px;color:var(--blue-dark);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Federal Tax</div>
+              <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:var(--blue);" id="j-chart-tax">—</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="j-chart-tax-pct">—% of combined salary</div>
+            </div>
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;">
+              <div style="font-size:10px;color:#14532d;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Take-Home</div>
+              <div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:600;color:var(--green);" id="j-chart-takehome">—</div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="j-chart-takehome-pct">—% of combined salary</div>
+            </div>
+          </div>
           <div class="legend">
             <div class="legend-item"><div class="legend-dot" style="background:#1a56db;"></div><span style="color:var(--text-secondary);">Federal Tax</span></div>
             <div class="legend-item"><div class="legend-dot" style="background:#c7d7f9;border:1px solid #93c5fd;"></div><span style="color:var(--text-secondary);">Take-Home</span></div>
@@ -1208,6 +1232,14 @@ function calcSingle() {
   }
 
   sChart = drawChart('s-chart', sChart, salary, totalTax);
+
+  // Chart summary tiles
+  const annualDeducted = (simmedTotal != null && pp) ? simmedTotal * pp : totalTax;
+  const displayTakeHome = salary - annualDeducted;
+  document.getElementById('s-chart-tax').textContent       = fmt(totalTax);
+  document.getElementById('s-chart-tax-pct').textContent   = (salary > 0 ? (totalTax/salary*100).toFixed(1) : '—') + '% of salary';
+  document.getElementById('s-chart-takehome').textContent  = fmt(displayTakeHome);
+  document.getElementById('s-chart-takehome-pct').textContent = (salary > 0 ? (displayTakeHome/salary*100).toFixed(1) : '—') + '% of salary';
 }
 
 // ══════════════════════════════════════════════
@@ -1340,6 +1372,12 @@ function calcJoint() {
   applyNetAndSim(w2, req2, pp2, adj2, 'j-net-card2', 'j-net-value2', 'j-net-sub2', 'j-sim-pos2', 'j-sim-ref2');
 
   jChart = drawChart('j-chart', jChart, combined, totalTax);
+
+  // Chart summary tiles
+  document.getElementById('j-chart-tax').textContent       = fmt(totalTax);
+  document.getElementById('j-chart-tax-pct').textContent   = (combined > 0 ? (totalTax/combined*100).toFixed(1) : '—') + '% of combined';
+  document.getElementById('j-chart-takehome').textContent  = fmt(combinedTakeHome);
+  document.getElementById('j-chart-takehome-pct').textContent = (combined > 0 ? (combinedTakeHome/combined*100).toFixed(1) : '—') + '% of combined';
 }
 
 // ══════════════════════════════════════════════
