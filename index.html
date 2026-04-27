@@ -435,7 +435,7 @@
           <div style="width:26px;height:26px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:white;">3</div>
           <div>
             <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;">Fill in the Tax Bracket Table</div>
-            <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">This is <strong>required</strong> for results to appear. Visit the <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:500;">IRS bracket page</a>, find your tax year and filing status, then enter the <strong>lower limit</strong> for each bracket (12% through 35%). The 10% row is pre-filled. The 37% row is optional.</div>
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">This is <strong>required</strong> for results to appear. Visit the <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:underline;">IRS bracket page ↗</a>, find your tax year and filing status, then enter the <strong>lower limit</strong> for each bracket (12% through 35%). The 10% row is pre-filled. The 37% row is optional.</div>
           </div>
         </div>
 
@@ -535,11 +535,18 @@
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
           Enter the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket. Upper Limit, Taxable Amount, and Tax Owed calculate automatically.
         </p>
-        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">
-          Find current IRS bracket thresholds at
-          <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:500;">irs.gov/filing/federal-income-tax-rates-and-brackets</a>.
+        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;">
           The <strong>10% lower limit is always $0</strong> and is pre-filled. The <strong>37% bracket is optional</strong> — leave it blank if your income won't reach it.
         </p>
+        <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:white;
+                  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+                  padding:9px 16px;border-radius:8px;text-decoration:none;margin-bottom:16px;
+                  box-shadow:0 2px 8px rgba(26,86,219,0.3);transition:opacity 0.15s;"
+           onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          🔗 Look up IRS Tax Brackets &amp; Rates
+          <span style="font-size:10px;opacity:0.85;">↗ irs.gov</span>
+        </a>
 
         <div class="bracket-scroll">
         <table class="bracket-table">
@@ -769,11 +776,18 @@
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
           Enter the <strong style="color:var(--blue)">Lower Limit</strong> for each bracket — all other columns auto-calculate.
         </p>
-        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:14px;">
-          Find current IRS bracket thresholds at
-          <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank" style="color:var(--blue);font-weight:500;">irs.gov/filing/federal-income-tax-rates-and-brackets</a>.
+        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;">
           The <strong>10% lower limit is always $0</strong> and is pre-filled. The <strong>37% bracket is optional</strong> — leave it blank if your combined income won't reach it.
         </p>
+        <a href="https://www.irs.gov/filing/federal-income-tax-rates-and-brackets" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:white;
+                  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+                  padding:9px 16px;border-radius:8px;text-decoration:none;margin-bottom:16px;
+                  box-shadow:0 2px 8px rgba(26,86,219,0.3);transition:opacity 0.15s;"
+           onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          🔗 Look up IRS Tax Brackets &amp; Rates
+          <span style="font-size:10px;opacity:0.85;">↗ irs.gov</span>
+        </a>
 
         <div class="bracket-scroll">
         <table class="bracket-table">
